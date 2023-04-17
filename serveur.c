@@ -60,7 +60,6 @@ int main(int argc, char *argv[])
   struct sockaddr_in aC;
   socklen_t lg = sizeof(struct sockaddr_in);
   int dSC = accept(dS, (struct sockaddr *)&aC, &lg);
-  int dSC = accept(dS, (struct sockaddr *)&aC, &lg);
   printf("Client Connecté\n");
 
   if (dSC == -1)
