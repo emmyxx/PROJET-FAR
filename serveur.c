@@ -3,6 +3,7 @@
 #include <arpa/inet.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 int main(int argc, char *argv[]) {
   
@@ -50,7 +51,7 @@ int main(int argc, char *argv[]) {
   printf("Message Envoyé\n");
   
   // Fermer la connexion avec le client et fermer la socket
-  shutdown(dSC, 2);
-  shutdown(dS, 2);
+  close(dSC);
+  close(dS);
   printf("Fin du programme");
 }
