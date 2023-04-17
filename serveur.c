@@ -18,13 +18,15 @@ int main(int argc, char *argv[])
     exit(EXIT_FAILURE);
   }
 
+  const int PORT = htons(atoi(argv[1]));
+
   // Création de la socket
   // PF_INET : protocole IP
   // SOCK_STREAM : protocole TCP
-  int dS = socket(PF_INET, SOCK_STREAM, 0);
+  int socketEcouteur = socket(PF_INET, SOCK_STREAM, 0);
   printf("Socket Créé\n");
 
-  if (dS == -1)
+  if (socketEcouteur == -1)
   {
     perror("Erreur de création de la socket");
     exit(EXIT_FAILURE);
@@ -33,22 +35,22 @@ int main(int argc, char *argv[])
   // Configuration de l'adresse
   // AF_INET : IPv4
   // INADDR_ANY : écoute sur toutes les interfaces réseaux
-  struct sockaddr_in ad;
-  ad.sin_family = AF_INET;
-  ad.sin_addr.s_addr = INADDR_ANY;
-  // hton convertir un entier en format réseau
-  ad.sin_port = htons(atoi(argv[1]));
+  struct sockaddr_in adresseEcouteur;
+  adresseEcouteur.sin_family = AF_INET;
+  adresseEcouteur.sin_addr.s_addr = INADDR_ANY;
+  adresseEcouteur.sin_port = PORT;
 
   // Associer l'adresse à la socket
-  if (bind(dS, (struct sockaddr *)&ad, sizeof(ad)) == -1)
+  if (bind(socketEcouteur, (struct sockaddr *)&adresseEcouteur, sizeof(adresseEcouteur)) == -1)
   {
     perror("Erreur de nommage de la socket");
     exit(EXIT_FAILURE);
   }
 
   printf("Socket Nommé\n");
+
   // Passer la socket en mode écoute
-  if (listen(dS, 7) == -1)
+  if (listen(socketEcouteur, 7) == -1)
   {
     perror("Erreur de passage en mode écoute");
     exit(EXIT_FAILURE);
@@ -57,44 +59,44 @@ int main(int argc, char *argv[])
   printf("Mode écoute\n");
 
   // Accepter la connexion entrante
-  struct sockaddr_in aC;
-  socklen_t lg = sizeof(struct sockaddr_in);
-  int dSC = accept(dS, (struct sockaddr *)&aC, &lg);
+  struct sockaddr_in adresseClient;
+  socklen_t longueurAdrClient = sizeof(struct sockaddr_in);
+  int socketClient = accept(socketEcouteur, (struct sockaddr *)&adresseClient, &longueurAdrClient);
   printf("Client Connecté\n");
 
-  if (dSC == -1)
+  if (socketClient == -1)
   {
     perror("Erreur de connexion");
     exit(EXIT_FAILURE);
   }
 
   // Recevoir le message du client
-  char msg[20];
-  if (recv(dSC, msg, sizeof(msg), 0) == -1)
+  char messageDuClient[20];
+  if (recv(socketClient, messageDuClient, sizeof(messageDuClient), 0) == -1)
   {
     perror("Erreur de reception ");
     exit(EXIT_FAILURE);
   }
 
-  printf("Message reçu : %s\n", msg);
+  printf("message reçu : %s\n", messageDuClient);
 
 
   // Préparer le message à envoyer au client
-  int r = 10;
+  int reponseDuServeur = 10;
 
 
   // Envoyer le message au client
-  if (send(dSC, &r, sizeof(int), 0) == -1)
+  if (send(socketClient, &reponseDuServeur, sizeof(int), 0) == -1)
   {
     perror("Erreur d'envoie");
     exit(EXIT_FAILURE);
   }
 
-  printf("Message Envoyé\n");
+  printf("message Envoyé\n");
 
 
   // Fermer la connexion avec le client et fermer la socket
-  close(dSC);
-  close(dS);
+  close(socketClient);
+  close(socketEcouteur);
   printf("Fin du programme");
 }
