@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
     fprintf(stderr,
             "Erreur : %d arguments attendus, mais %d ont été fournis.\n",
             NB_ARGS_ATTENDUS, argc);
-    fprintf(stderr, "Utilisation : %s <adresse_IP> <port>\n", argv[0]);
+    fprintf(stderr, "Utilisation : %s <port>\n", argv[0]);
     exit(EXIT_FAILURE);
   }
 
