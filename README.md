@@ -1,11 +1,12 @@
 # PROJET-FAR
+
 ### Séance 1 : Un serveur relaie des messages textuels entre deux clients 
 - 1 programme serveur et 1 programme client, lancé deux fois (deux processus distincts)
 - 1 seul processus/thread serveur pour gérer les 2 clients, qui envoient leurs messages à tour de rôle (client 1 : write puis read, et client 2 : read puis write)
 - L’échange de messages s’arrête lorsque l’un des clients envoie le message « fin ». Ceci n’arrête pas le serveur, qui peut attendre la connexion d’autres clients.
 - On utilisera le protocole TCP.
 
-## Séance 2 à 4 : Un serveur et un client multi-threadés
+### Séance 2 à 4 : Un serveur et un client multi-threadés
 
 v1 : Utiliser le multi-threading pour gérer l’envoi de messages dans n’importe quel ordre (on ne sera plus contraint par le fait que c’est le premier client qui se connecte qui envoie un message en premier et attend que l’autre lui écrive un message pour pouvoir envoyer un autre message) :
 
