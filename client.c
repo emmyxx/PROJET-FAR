@@ -5,7 +5,8 @@
 #include <string.h>
 #include <unistd.h>
 
-const int NB_ARGS_ATTENDUS = 3;
+#define NB_ARGS_ATTENDUS 4
+#define TAILLE_MESSAGE 256
 
 void gestionnaireErreur(const char *message)
 {
@@ -13,27 +14,30 @@ void gestionnaireErreur(const char *message)
   exit(EXIT_FAILURE);
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
 
   if (argc != NB_ARGS_ATTENDUS)
   {
     fprintf(stderr,
             "Erreur : %d arguments attendus, mais %d ont été fournis.\n",
             NB_ARGS_ATTENDUS, argc);
-    fprintf(stderr, "Utilisation : %s <adresse_ip> <port>\n", argv[0]);
+    fprintf(stderr, "Utilisation : %s <adresse_ip> <port> <client1|client2>\n", argv[0]);
     exit(EXIT_FAILURE);
   }
 
+  const char *IP_SERVEUR = argv[1];
   const int PORT_SERVEUR = atoi(argv[2]);
-  const char* IP_SERVEUR = argv[1];
+  const int estClient1 = strcmp(argv[3], "client1") == 0;
+  printf("Est un client 1 : %d", estClient1);
 
   printf("Début programme\n");
-  
+
   // Création de la socket
-  int socketEcouteur = socket(PF_INET, SOCK_STREAM, 0);
+  int socketServeur = socket(PF_INET, SOCK_STREAM, 0);
   printf("Socket Créé\n");
 
-  if (socketEcouteur == -1) 
+  if (socketServeur == -1)
     gestionnaireErreur("Erreur de création de la socket");
 
   // Configuration de l'adresse du serveur
@@ -45,31 +49,55 @@ int main(int argc, char *argv[]) {
   socklen_t longueurAdresse = sizeof(struct sockaddr_in);
 
   // Connexion à la socket serveur
-  if(connect(socketEcouteur, (struct sockaddr *) &adresseEcouteur, longueurAdresse) == -1) 
+  if (connect(socketServeur, (struct sockaddr *)&adresseEcouteur, longueurAdresse) == -1)
     gestionnaireErreur("Erreur de connexion");
-  
+
   printf("Socket Connecté\n");
 
-  // Préparation du message à envoyer au serveur
-  char * messageDuClient = "TEST";
-  
-  // Envoi du message au serveur
-  if(send(socketEcouteur, messageDuClient, strlen(messageDuClient), 0) == -1) 
-    gestionnaireErreur("Erreur d'envoi");
+  char messageEnvoye[TAILLE_MESSAGE];
+  char messageRecu[TAILLE_MESSAGE];
 
-  printf("Message Envoyé \n");
+  if (estClient1)
+  {
+    printf("Moi: ");
+    fgets(messageEnvoye, TAILLE_MESSAGE, stdin);
+    printf("\n");
 
-  // Réception de la réponse du serveur
-  int reponseDuServeur;
-  
-  if(recv(socketEcouteur, &reponseDuServeur, sizeof(int), 0) == -1) 
-    gestionnaireErreur("Erreur de réception");
+    strtok(messageEnvoye, "\n"); // remplacement du caractère de nouvelle ligne par un caractère nul
 
-  printf("Réponse reçue : %d\n", reponseDuServeur);
+    if (send(socketServeur, messageEnvoye, TAILLE_MESSAGE, 0) == -1)
+      gestionnaireErreur("Erreur d'envoi");
+
+    if (recv(socketServeur, messageRecu, TAILLE_MESSAGE, 0) == -1)
+      gestionnaireErreur("Erreur de réception");
+
+    printf("Ami: %s\n", messageRecu);
+  }
+
+  // Du point de vue du client 2
+  // C2 <- S
+  // C2 -> S
+  // ...
+
+  else
+  {
+    if (recv(socketServeur, messageRecu, TAILLE_MESSAGE, 0) == -1)
+      gestionnaireErreur("Erreur de réception");
+
+    printf("Ami: %s\n", messageRecu);
+
+    printf("Moi: ");
+    fgets(messageEnvoye, TAILLE_MESSAGE, stdin);
+
+    strtok(messageEnvoye, "\n"); // remplacement du caractère de nouvelle ligne par un caractère nul
+
+    if (send(socketServeur, messageEnvoye, TAILLE_MESSAGE, 0) == -1)
+      gestionnaireErreur("Erreur d'envoi");
+  }
 
   // Fermeture de la socket
-  close(socketEcouteur);
-  printf("Fin du programme");
+  close(socketServeur);
+  printf("Fin du programme\n");
 
   return 0;
 }

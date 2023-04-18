@@ -6,7 +6,7 @@
 #include <unistd.h>
 
 const int NB_ARGS_ATTENDUS = 2;
-const int TAILLE_MESSAGE = 20;
+const int TAILLE_MESSAGE = 256;
 
 void gestionnaireErreur(const char *message)
 {
@@ -28,6 +28,7 @@ int main(int argc, char *argv[])
   int PORT = atoi(argv[1]);
 
   int socketEcouteur = socket(PF_INET, SOCK_STREAM, 0);
+
   if (socketEcouteur < 0)
     gestionnaireErreur("Erreur de création de la socket");
 
@@ -50,28 +51,55 @@ int main(int argc, char *argv[])
 
   struct sockaddr_in adresseClient;
   socklen_t longueurAdrClient = sizeof(struct sockaddr_in);
-  int socketClient = accept(socketEcouteur, (struct sockaddr *)&adresseClient, &longueurAdrClient);
 
-  if (socketClient < 0)
+  int socketClient1 = accept(socketEcouteur, (struct sockaddr *)&adresseClient, &longueurAdrClient);
+
+  if (socketClient1 < 0)
     gestionnaireErreur("Erreur de connexion");
 
-  printf("Client Connecté\n");
+  printf("Client1 Connecté\n");
 
-  char messageDuClient[TAILLE_MESSAGE];
-  if (recv(socketClient, messageDuClient, sizeof(messageDuClient), 0) < 0)
-    gestionnaireErreur("Erreur de reception ");
+  int socketClient2 = accept(socketEcouteur, (struct sockaddr *)&adresseClient, &longueurAdrClient);
 
-  printf("message reçu : %s\n", messageDuClient);
+  if (socketClient2 < 0)
+    gestionnaireErreur("Erreur de connexion");
 
-  int reponseDuServeur = 10;
+  printf("Client2 Connecté\n");
 
-  if (send(socketClient, &reponseDuServeur, sizeof(int), 0) < 0)
-    gestionnaireErreur("Erreur d'envoie");
+  char messageDuClient1[TAILLE_MESSAGE];
+  char messageDuClient2[TAILLE_MESSAGE];
 
-  printf("message Envoyé\n");
+  while (strcmp(messageDuClient1, "fin") != 0 || strcmp(messageDuClient2, "fin") != 0)
+  {
+    // le serveur reçoit le message du client 1
+    if (recv(socketClient1, messageDuClient1, TAILLE_MESSAGE, 0) < 0)
+      gestionnaireErreur("Erreur de reception ");
 
-  close(socketClient);
+    printf("Le message reçu: %s\n", messageDuClient1);
+
+    // le serveur renvoie le message du client 1 au client 2
+    if (send(socketClient2, messageDuClient1, TAILLE_MESSAGE, 0) < 0)
+      gestionnaireErreur("Erreur d'envoi");
+
+    printf("Le message envoyé: %s\n", messageDuClient1);
+
+    // le serveur reçoit le message du client 2
+    if (recv(socketClient2, messageDuClient2, TAILLE_MESSAGE, 0) < 0)
+      gestionnaireErreur("Erreur de reception ");
+
+    printf("Le message reçu: %s\n", messageDuClient2);
+
+    // le serveur renvoie le message du client 2 au client 1
+    if (send(socketClient1, messageDuClient2, TAILLE_MESSAGE, 0) < 0)
+      gestionnaireErreur("Erreur d'envoi");
+
+    printf("Le message envoyé: %s\n", messageDuClient2);
+  }
+
+  close(socketClient1);
+  close(socketClient2);
   close(socketEcouteur);
+
   printf("Fin du programme\n");
 
   return 0;
