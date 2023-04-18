@@ -5,8 +5,8 @@
 #include <string.h>
 #include <unistd.h>
 
-const int NB_ARGS_ATTENDUS = 2;
-const int TAILLE_MESSAGE = 256;
+#define NB_ARGS_ATTENDUS 2
+#define TAILLE_MESSAGE 256
 
 void gestionnaireErreur(const char *message)
 {
@@ -72,26 +72,24 @@ int main(int argc, char *argv[])
   while (strcmp(messageDuClient1, "fin") != 0 || strcmp(messageDuClient2, "fin") != 0)
   {
     // le serveur reçoit le message du client 1
-    if (recv(socketClient1, messageDuClient1, TAILLE_MESSAGE, 0) < 0)
-      gestionnaireErreur("Erreur de reception ");
+    if (recv(socketClient1, messageDuClient1, TAILLE_MESSAGE, 0) == 0)
+      break;
 
     printf("Le message reçu: %s\n", messageDuClient1);
 
     // le serveur renvoie le message du client 1 au client 2
-    if (send(socketClient2, messageDuClient1, TAILLE_MESSAGE, 0) < 0)
-      gestionnaireErreur("Erreur d'envoi");
+    send(socketClient2, messageDuClient1, TAILLE_MESSAGE, 0);
 
     printf("Le message envoyé: %s\n", messageDuClient1);
 
     // le serveur reçoit le message du client 2
-    if (recv(socketClient2, messageDuClient2, TAILLE_MESSAGE, 0) < 0)
-      gestionnaireErreur("Erreur de reception ");
+    if (recv(socketClient2, messageDuClient2, TAILLE_MESSAGE, 0) == 0)
+      break;
 
     printf("Le message reçu: %s\n", messageDuClient2);
 
     // le serveur renvoie le message du client 2 au client 1
-    if (send(socketClient1, messageDuClient2, TAILLE_MESSAGE, 0) < 0)
-      gestionnaireErreur("Erreur d'envoi");
+    send(socketClient1, messageDuClient2, TAILLE_MESSAGE, 0);
 
     printf("Le message envoyé: %s\n", messageDuClient2);
   }

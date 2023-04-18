@@ -29,7 +29,6 @@ int main(int argc, char *argv[])
   const char *IP_SERVEUR = argv[1];
   const int PORT_SERVEUR = atoi(argv[2]);
   const int estClient1 = strcmp(argv[3], "client1") == 0;
-  printf("Est un client 1 : %d", estClient1);
 
   printf("Début programme\n");
 
@@ -57,47 +56,43 @@ int main(int argc, char *argv[])
   char messageEnvoye[TAILLE_MESSAGE];
   char messageRecu[TAILLE_MESSAGE];
 
-  if (estClient1)
+  while (1)
   {
-    printf("Moi: ");
-    fgets(messageEnvoye, TAILLE_MESSAGE, stdin);
-    printf("\n");
+    // Envoie le message en premier
+    if (estClient1)
+    {
+      printf("Moi: ");
+      fgets(messageEnvoye, TAILLE_MESSAGE, stdin);
+      printf("\n");
 
-    strtok(messageEnvoye, "\n"); // remplacement du caractère de nouvelle ligne par un caractère nul
+      strtok(messageEnvoye, "\n"); // remplacement du caractère de nouvelle ligne par un caractère nul
 
-    if (send(socketServeur, messageEnvoye, TAILLE_MESSAGE, 0) == -1)
-      gestionnaireErreur("Erreur d'envoi");
+      send(socketServeur, messageEnvoye, TAILLE_MESSAGE, 0);
 
-    if (recv(socketServeur, messageRecu, TAILLE_MESSAGE, 0) == -1)
-      gestionnaireErreur("Erreur de réception");
+      if (recv(socketServeur, messageRecu, TAILLE_MESSAGE, 0) == 0)
+        break;
+    }
 
-    printf("Ami: %s\n", messageRecu);
-  }
+    // Attend que le correspondant ait envoyé son message
+    else
+    {
+      if (recv(socketServeur, messageRecu, TAILLE_MESSAGE, 0) == 0)
+        break;
 
-  // Du point de vue du client 2
-  // C2 <- S
-  // C2 -> S
-  // ...
+      printf("Ami: %s\n", messageRecu);
 
-  else
-  {
-    if (recv(socketServeur, messageRecu, TAILLE_MESSAGE, 0) == -1)
-      gestionnaireErreur("Erreur de réception");
+      printf("Moi: ");
+      fgets(messageEnvoye, TAILLE_MESSAGE, stdin);
 
-    printf("Ami: %s\n", messageRecu);
+      strtok(messageEnvoye, "\n"); // remplacement du caractère de nouvelle ligne par un caractère nul
 
-    printf("Moi: ");
-    fgets(messageEnvoye, TAILLE_MESSAGE, stdin);
-
-    strtok(messageEnvoye, "\n"); // remplacement du caractère de nouvelle ligne par un caractère nul
-
-    if (send(socketServeur, messageEnvoye, TAILLE_MESSAGE, 0) == -1)
-      gestionnaireErreur("Erreur d'envoi");
+      send(socketServeur, messageEnvoye, TAILLE_MESSAGE, 0);
+    }
   }
 
   // Fermeture de la socket
   close(socketServeur);
-  printf("Fin du programme\n");
+  printf("Fin de la connexion\n");
 
   return 0;
 }
