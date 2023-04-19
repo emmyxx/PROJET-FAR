@@ -1,8 +1,8 @@
 all:
-	mkdir -p include
-	gcc -g -Wall -o ./include/client ./src/client.c
-	gcc -g -Wall -o ./include/serveur ./src/serveur.c
+	mkdir -p build
+	gcc -g -Wall -o ./build/client ./src/client.c
+	gcc -g -Wall -o ./build/serveur ./src/serveur.c
 
 clean: 
-	$(RM) ./include/client
-	$(RM) ./include/serveur
+	$(RM) ./build/client
+	$(RM) ./build/serveur

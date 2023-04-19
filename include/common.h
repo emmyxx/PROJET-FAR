@@ -1,0 +1,1 @@
+void gestionnaireErreur(const char *message);

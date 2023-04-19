@@ -56,5 +56,5 @@ dkms.conf
 !*/
 !*.*
 .vscode/
-output/
+build/
 !Makefile

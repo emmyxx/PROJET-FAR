@@ -5,14 +5,10 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "../include/common.h"
+
 #define NB_ARGS_ATTENDUS 4
 #define TAILLE_MESSAGE 256
-
-void gestionnaireErreur(const char *message)
-{
-  perror(message);
-  exit(EXIT_FAILURE);
-}
 
 int main(int argc, char *argv[])
 {
@@ -95,4 +91,10 @@ int main(int argc, char *argv[])
   printf("Fin de la connexion\n");
 
   return 0;
+}
+
+void gestionnaireErreur(const char *message)
+{
+  perror(message);
+  exit(EXIT_FAILURE);
 }

@@ -5,14 +5,11 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "../include/serveur.h"
+#include "../include/common.h"
+
 #define NB_ARGS_ATTENDUS 2
 #define TAILLE_MESSAGE 256
-
-void gestionnaireErreur(const char *message)
-{
-  perror(message);
-  exit(EXIT_FAILURE);
-}
 
 int main(int argc, char *argv[])
 {
@@ -49,20 +46,11 @@ int main(int argc, char *argv[])
 
   printf("Mode écoute\n");
 
-  struct sockaddr_in adresseClient;
-  socklen_t longueurAdrClient = sizeof(struct sockaddr_in);
-
-  int socketClient1 = accept(socketEcouteur, (struct sockaddr *)&adresseClient, &longueurAdrClient);
-
-  if (socketClient1 < 0)
-    gestionnaireErreur("Erreur de connexion");
+  int socketClient1 = accepterClient(socketEcouteur);
 
   printf("Client1 Connecté\n");
 
-  int socketClient2 = accept(socketEcouteur, (struct sockaddr *)&adresseClient, &longueurAdrClient);
-
-  if (socketClient2 < 0)
-    gestionnaireErreur("Erreur de connexion");
+  int socketClient2 = accepterClient(socketEcouteur);
 
   printf("Client2 Connecté\n");
 
@@ -105,4 +93,21 @@ int main(int argc, char *argv[])
   printf("Fin du programme\n");
 
   return 0;
+}
+
+void gestionnaireErreur(const char *message)
+{
+  perror(message);
+  exit(EXIT_FAILURE);
+}
+
+int accepterClient(int socketEcouteur){
+  struct sockaddr_in adresseClient;
+  socklen_t longueurAdrClient = sizeof(struct sockaddr_in);
+  int socketClient = accept(socketEcouteur, (struct sockaddr *)&adresseClient, &longueurAdrClient);
+
+  if (socketClient < 0)
+    gestionnaireErreur("Erreur de connexion");
+  
+  return socketClient;
 }
