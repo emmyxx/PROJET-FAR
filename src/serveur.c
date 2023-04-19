@@ -15,37 +15,13 @@ int main(int argc, char *argv[])
 {
   gestionnaireArguments(argc, argv);
 
-  int PORT = atoi(argv[1]);
+  int port = atoi(argv[1]);
 
-  int socketEcouteur = socket(PF_INET, SOCK_STREAM, 0);
-
-  if (socketEcouteur < 0)
-    gestionnaireErreur("Erreur de création de la socket");
-
-  printf("Socket Créé\n");
-
-  struct sockaddr_in adresseEcouteur;
-  adresseEcouteur.sin_family = AF_INET;
-  adresseEcouteur.sin_addr.s_addr = INADDR_ANY;
-  adresseEcouteur.sin_port = htons(PORT);
-
-  if (bind(socketEcouteur, (struct sockaddr *)&adresseEcouteur, sizeof(adresseEcouteur)) < 0)
-    gestionnaireErreur("Erreur de nommage de la socket");
-
-  printf("Socket Nommé\n");
-
-  if (listen(socketEcouteur, 7) < 0)
-    gestionnaireErreur("Erreur de passage en mode écoute");
-
-  printf("Mode écoute\n");
+  int socketEcouteur = creerSocketEcouteur(port, 2);
 
   int socketClient1 = accepterClient(socketEcouteur);
 
-  printf("Client1 Connecté\n");
-
   int socketClient2 = accepterClient(socketEcouteur);
-
-  printf("Client2 Connecté\n");
 
   char messageDuClient1[TAILLE_MESSAGE];
   char messageDuClient2[TAILLE_MESSAGE];
@@ -94,6 +70,8 @@ int accepterClient(int socketEcouteur){
 
   if (socketClient < 0)
     gestionnaireErreur("Erreur de connexion");
+
+  printf("Client Connecté\n");
   
   return socketClient;
 }
@@ -108,4 +86,30 @@ void gestionnaireArguments(int argc, char *argv[])
     fprintf(stderr, "Utilisation : %s <port>\n", argv[0]);
     exit(EXIT_FAILURE);
   }
+}
+
+int creerSocketEcouteur(int port, int nbClients) {
+  int socketEcouteur = socket(PF_INET, SOCK_STREAM, 0);
+
+  if (socketEcouteur < 0)
+    gestionnaireErreur("Erreur de création de la socket");
+
+  printf("Socket Créé\n");
+
+  struct sockaddr_in adresseEcouteur;
+  adresseEcouteur.sin_family = AF_INET;
+  adresseEcouteur.sin_addr.s_addr = INADDR_ANY;
+  adresseEcouteur.sin_port = htons(port);
+
+  if (bind(socketEcouteur, (struct sockaddr *)&adresseEcouteur, sizeof(adresseEcouteur)) < 0)
+    gestionnaireErreur("Erreur de nommage de la socket");
+
+  printf("Socket Nommé\n");
+
+  if (listen(socketEcouteur, nbClients) < 0)
+    gestionnaireErreur("Erreur de passage en mode écoute");
+
+  printf("Mode écoute\n");
+
+  return socketEcouteur;
 }
