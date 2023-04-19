@@ -5,8 +5,8 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "../include/serveur.h"
 #include "../include/common.h"
+#include "../include/serveur.h"
 
 #define NB_ARGS_ATTENDUS 2
 #define TAILLE_MESSAGE 256
@@ -93,12 +93,6 @@ int main(int argc, char *argv[])
   printf("Fin du programme\n");
 
   return 0;
-}
-
-void gestionnaireErreur(const char *message)
-{
-  perror(message);
-  exit(EXIT_FAILURE);
 }
 
 int accepterClient(int socketEcouteur){
