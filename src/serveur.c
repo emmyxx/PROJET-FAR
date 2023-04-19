@@ -69,10 +69,13 @@ int main(int argc, char *argv[])
   char messageDuClient1[TAILLE_MESSAGE];
   char messageDuClient2[TAILLE_MESSAGE];
 
-  while (strcmp(messageDuClient1, "fin") != 0 || strcmp(messageDuClient2, "fin") != 0)
+  while (strcmp(messageDuClient1, "fin") != 0 && strcmp(messageDuClient2, "fin") != 0)
   {
     // le serveur reçoit le message du client 1
     if (recv(socketClient1, messageDuClient1, TAILLE_MESSAGE, 0) == 0)
+      break;
+
+    if(strcmp(messageDuClient1, "fin") == 0)
       break;
 
     printf("Le message reçu: %s\n", messageDuClient1);
@@ -92,6 +95,7 @@ int main(int argc, char *argv[])
     send(socketClient1, messageDuClient2, TAILLE_MESSAGE, 0);
 
     printf("Le message envoyé: %s\n", messageDuClient2);
+
   }
 
   close(socketClient1);
