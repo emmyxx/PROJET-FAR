@@ -23,25 +23,24 @@ int main(int argc, char *argv[])
 
   int socketClient2 = accepterClient(socketEcouteur);
 
-  char messageDuClient1[TAILLE_MESSAGE];
-  char messageDuClient2[TAILLE_MESSAGE];
+  char message[TAILLE_MESSAGE];
 
   struct socketClients clients = {
     clientEmetteur: socketClient1,
     clientRecepteur: socketClient2
   };
   
-  while (strcmp(messageDuClient1, "fin") != 0 && strcmp(messageDuClient2, "fin") != 0)
+  while (strcmp(message, "fin") != 0)
   {
-    if (recv(clients.clientEmetteur, messageDuClient1, TAILLE_MESSAGE, 0) == 0)
+    if (recv(clients.clientEmetteur, message, TAILLE_MESSAGE, 0) == 0)
       break;
 
-    printf("Le message reçu: %s\n", messageDuClient1);
+    printf("Le message reçu: %s\n", message);
 
-    if(strcmp(messageDuClient1, "fin") == 0)
+    if(strcmp(message, "fin") == 0)
       break;
 
-    send(clients.clientRecepteur, messageDuClient1, TAILLE_MESSAGE, 0);
+    send(clients.clientRecepteur, message, TAILLE_MESSAGE, 0);
 
     // Inversion des clients émetteur et recepteur
     struct socketClients temp = clients;
