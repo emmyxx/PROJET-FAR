@@ -26,32 +26,27 @@ int main(int argc, char *argv[])
   char messageDuClient1[TAILLE_MESSAGE];
   char messageDuClient2[TAILLE_MESSAGE];
 
+  struct socketClients clients = {
+    clientEmetteur: socketClient1,
+    clientRecepteur: socketClient2
+  };
+  
   while (strcmp(messageDuClient1, "fin") != 0 && strcmp(messageDuClient2, "fin") != 0)
   {
-    // le serveur reçoit le message du client 1
-    if (recv(socketClient1, messageDuClient1, TAILLE_MESSAGE, 0) == 0)
-      break;
-
-    if(strcmp(messageDuClient1, "fin") == 0)
+    if (recv(clients.clientEmetteur, messageDuClient1, TAILLE_MESSAGE, 0) == 0)
       break;
 
     printf("Le message reçu: %s\n", messageDuClient1);
 
-    // le serveur renvoie le message du client 1 au client 2
-    send(socketClient2, messageDuClient1, TAILLE_MESSAGE, 0);
-
-    printf("Le message envoyé: %s\n", messageDuClient1);
-
-    // le serveur reçoit le message du client 2
-    if (recv(socketClient2, messageDuClient2, TAILLE_MESSAGE, 0) == 0)
+    if(strcmp(messageDuClient1, "fin") == 0)
       break;
 
-    printf("Le message reçu: %s\n", messageDuClient2);
+    send(clients.clientRecepteur, messageDuClient1, TAILLE_MESSAGE, 0);
 
-    // le serveur renvoie le message du client 2 au client 1
-    send(socketClient1, messageDuClient2, TAILLE_MESSAGE, 0);
-
-    printf("Le message envoyé: %s\n", messageDuClient2);
+    // Inversion des clients émetteur et recepteur
+    struct socketClients temp = clients;
+    clients.clientEmetteur = temp.clientRecepteur;
+    clients.clientRecepteur = temp.clientEmetteur;
   }
 
   close(socketClient1);
