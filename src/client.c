@@ -37,16 +37,9 @@ int main(int argc, char *argv[])
 
   while (estConnecte)
   {
-    printf("Moi: ");
-
-    fgets(messageEnvoye, TAILLE_MESSAGE, stdin);
-    strtok(messageEnvoye, "\n"); // remplacement du caractère de nouvelle ligne par un caractère nul
-
-    printf("\n");
-
+    demanderMessage(messageEnvoye);
     send(socketServeur, messageEnvoye, TAILLE_MESSAGE, 0);
     estConnecte = recv(socketServeur, messageRecu, TAILLE_MESSAGE, 0) != 0;
-    
     printf("Ami: %s\n", messageRecu);
   }
 
@@ -96,4 +89,12 @@ int creerConnexionServeur(const char *ipServeur, const int portServeur)
   printf("Socket Connecté\n");
 
   return socketServeur;
+}
+
+void demanderMessage(char *message) {
+  printf("Moi: ");
+  fgets(message, TAILLE_MESSAGE, stdin);
+  // remplacement du caractère de nouvelle ligne par un caractère nul
+  strtok(message, "\n");
+  printf("\n");
 }
