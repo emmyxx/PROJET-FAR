@@ -18,9 +18,7 @@ int main(int argc, char *argv[])
   int port = atoi(argv[1]);
 
   int socketEcouteur = creerSocketEcouteur(port, 2);
-
   int socketClient1 = accepterClient(socketEcouteur);
-
   int socketClient2 = accepterClient(socketEcouteur);
 
   char message[TAILLE_MESSAGE];
@@ -42,6 +40,8 @@ int main(int argc, char *argv[])
 
     send(clients.clientRecepteur, message, TAILLE_MESSAGE, 0);
 
+    printf("Le message envoyé: %s\n", message);
+
     // Inversion des clients émetteur et recepteur
     struct socketClients temp = clients;
     clients.clientEmetteur = temp.clientRecepteur;
@@ -51,9 +51,7 @@ int main(int argc, char *argv[])
   close(socketClient1);
   close(socketClient2);
   close(socketEcouteur);
-
   printf("Fin du programme\n");
-
   return 0;
 }
 
@@ -82,7 +80,7 @@ void gestionnaireArguments(int argc, char *argv[])
   }
 }
 
-int creerSocketEcouteur(int port, int nbClients) {
+int creerSocketEcouteur(int port, int nbClientsEnAttente) {
   int socketEcouteur = socket(PF_INET, SOCK_STREAM, 0);
 
   if (socketEcouteur < 0)
@@ -100,7 +98,7 @@ int creerSocketEcouteur(int port, int nbClients) {
 
   printf("Socket Nommé\n");
 
-  if (listen(socketEcouteur, nbClients) < 0)
+  if (listen(socketEcouteur, nbClientsEnAttente) < 0)
     gestionnaireErreur("Erreur de passage en mode écoute");
 
   printf("Mode écoute\n");

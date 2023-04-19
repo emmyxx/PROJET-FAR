@@ -1,6 +1,5 @@
 int accepterClient(int socketEcouteur);
-int creerSocketEcouteur(int port, int nbClients);
-
+int creerSocketEcouteur(int port, int nbClientsEnAttente);
 struct socketClients
 {
     int clientEmetteur;
