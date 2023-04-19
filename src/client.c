@@ -13,14 +13,7 @@
 int main(int argc, char *argv[])
 {
 
-  if (argc != NB_ARGS_ATTENDUS)
-  {
-    fprintf(stderr,
-            "Erreur : %d arguments attendus, mais %d ont été fournis.\n",
-            NB_ARGS_ATTENDUS, argc);
-    fprintf(stderr, "Utilisation : %s <adresse_ip> <port> <client1|client2>\n", argv[0]);
-    exit(EXIT_FAILURE);
-  }
+  gestionnaireArguments(argc, argv);
 
   const char *IP_SERVEUR = argv[1];
   const int PORT_SERVEUR = atoi(argv[2]);
@@ -91,4 +84,16 @@ int main(int argc, char *argv[])
   printf("Fin de la connexion\n");
 
   return 0;
+}
+
+void gestionnaireArguments(int argc, char *argv[])
+{
+  if (argc != NB_ARGS_ATTENDUS)
+  {
+    fprintf(stderr,
+            "Erreur : %d arguments attendus, mais %d ont été fournis.\n",
+            NB_ARGS_ATTENDUS, argc);
+    fprintf(stderr, "Utilisation : %s <adresse_ip> <port> <client1|client2>\n", argv[0]);
+    exit(EXIT_FAILURE);
+  }
 }

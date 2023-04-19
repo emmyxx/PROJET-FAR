@@ -13,14 +13,7 @@
 
 int main(int argc, char *argv[])
 {
-  if (argc != NB_ARGS_ATTENDUS)
-  {
-    fprintf(stderr,
-            "Erreur : %d arguments attendus, mais %d ont été fournis.\n",
-            NB_ARGS_ATTENDUS, argc);
-    fprintf(stderr, "Utilisation : %s <port>\n", argv[0]);
-    exit(EXIT_FAILURE);
-  }
+  gestionnaireArguments(argc, argv);
 
   int PORT = atoi(argv[1]);
 
@@ -83,7 +76,6 @@ int main(int argc, char *argv[])
     send(socketClient1, messageDuClient2, TAILLE_MESSAGE, 0);
 
     printf("Le message envoyé: %s\n", messageDuClient2);
-
   }
 
   close(socketClient1);
@@ -104,4 +96,16 @@ int accepterClient(int socketEcouteur){
     gestionnaireErreur("Erreur de connexion");
   
   return socketClient;
+}
+
+void gestionnaireArguments(int argc, char *argv[])
+{
+  if (argc != NB_ARGS_ATTENDUS)
+  {
+    fprintf(stderr,
+            "Erreur : %d arguments attendus, mais %d ont été fournis.\n",
+            NB_ARGS_ATTENDUS, argc);
+    fprintf(stderr, "Utilisation : %s <port>\n", argv[0]);
+    exit(EXIT_FAILURE);
+  }
 }
