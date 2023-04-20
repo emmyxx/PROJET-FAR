@@ -8,12 +8,13 @@
 #include "../include/common.h"
 #include "../include/serveur.h"
 
-#define NB_ARGS_ATTENDUS 8
+#define NB_ARGS_ATTENDUS 2
 #define TAILLE_MESSAGE 256
 
 int main(int argc, char *argv[])
 {
   gestionnaireArguments(argc, argv);
+
   const int port = atoi(argv[1]);
   const int socketEcouteur = creerSocketEcouteur(port, 2);
 
@@ -28,6 +29,8 @@ int main(int argc, char *argv[])
     nom : "client2",
     estConnecte : 1
   };
+
+  recevoirNom(client1, client2, nomClient);
 
   demarrerConversation(&client1, &client2, TAILLE_MESSAGE);
 
@@ -119,4 +122,14 @@ int demarrerConversation(client *emetteur, client *recepteur, const int tailleMe
   recepteur->estConnecte = 0;
   printf("Fin de la conversation\n");
   return 0;
+}
+
+int recevoirNom(client *client, char *nomClient, const int tailleNom) {
+    char nom[tailleNom];
+    if(recv(client->socket, nom, tailleNom, 0) == 0){
+        client->estConnecte = 0;
+        return -1;
+    }
+
+    return 0;
 }

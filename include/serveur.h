@@ -9,3 +9,5 @@ typedef struct client
 } client;
 
 int demarrerConversation(client *emetteur, client *recepteur, const int tailleMessage);
+
+int recevoirNom(client *client, char *nomClient, const int tailleNom);

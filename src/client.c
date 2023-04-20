@@ -8,16 +8,18 @@
 #include "../include/common.h"
 #include "../include/client.h"
 
-#define NB_ARGS_ATTENDUS 4
+#define NB_ARGS_ATTENDUS 5
 #define TAILLE_MESSAGE 256
 
 int main(int argc, char *argv[])
 {
+
   gestionnaireArguments(argc, argv);
 
   const char *ipServeur = argv[1];
   const int portServeur = atoi(argv[2]);
   const int estClient1 = strcmp(argv[3], "client1") == 0;
+  const char *nomClient = argv[4];
 
   char messageEnvoye[TAILLE_MESSAGE];
   char messageRecu[TAILLE_MESSAGE];
@@ -35,7 +37,7 @@ int main(int argc, char *argv[])
 
   while (estConnecte)
   {
-    entrerMessage(messageEnvoye);
+    entrerMessage(messageEnvoye, nomClient);
     send(socketServeur, messageEnvoye, TAILLE_MESSAGE, 0);
     estConnecte = recv(socketServeur, messageRecu, TAILLE_MESSAGE, 0) != 0; // FIXME si recv retourne une erreur, estConnecte sera à 1
     printf("Ami: %s\n", messageRecu);
@@ -58,7 +60,7 @@ void gestionnaireArguments(int argc, char *argv[])
     fprintf(stderr,
             "Erreur : %d arguments attendus, mais %d ont été fournis.\n",
             NB_ARGS_ATTENDUS, argc);
-    fprintf(stderr, "Utilisation : %s <adresse_ip> <port> <client1|client2>\n", argv[0]);
+    fprintf(stderr, "Utilisation : %s <adresse_ip> <port> <client1|client2> <nom_client>\n", argv[0]);
     exit(EXIT_FAILURE);
   }
 }
@@ -89,9 +91,10 @@ int creerConnexionServeur(const char *ipServeur, const int portServeur)
   return socketServeur;
 }
 
-void entrerMessage(char *message) {
-  printf("Moi: ");
+void entrerMessage(char *message, const char *nomClient)
+{
+  printf("%s: ", nomClient);
   fgets(message, TAILLE_MESSAGE, stdin);
-  // remplacement du caractère de nouvelle ligne par un caractère nul
+  // remplacement du caractère de nouvelle ligne par un caractère nul /0
   strtok(message, "\n");
 }
