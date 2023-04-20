@@ -1,2 +1,3 @@
 int creerConnexionServeur(const char *ipServeur, const int portServeur);
-void demanderMessage(char *message);
+void entrerMessage(char *message);
+void fermerSocketServeur(int socketServeur);

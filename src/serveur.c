@@ -8,40 +8,45 @@
 #include "../include/common.h"
 #include "../include/serveur.h"
 
-#define NB_ARGS_ATTENDUS 2
+#define NB_ARGS_ATTENDUS 8
 #define TAILLE_MESSAGE 256
 
 int main(int argc, char *argv[])
 {
   gestionnaireArguments(argc, argv);
+  const int port = atoi(argv[1]);
+  const int socketEcouteur = creerSocketEcouteur(port, 2);
 
-  int port = atoi(argv[1]);
-
-  int socketEcouteur = creerSocketEcouteur(port, 2);
-  int socketClient1 = accepterClient(socketEcouteur);
-  int socketClient2 = accepterClient(socketEcouteur);
-
-  struct socketClients clients = {
-    clientEmetteur: socketClient1,
-    clientRecepteur: socketClient2
+  client client1 = {
+    socket : accepterClient(socketEcouteur),
+    nom : "client1",
+    estConnecte : 1
   };
 
-  demarrerConversation(clients, TAILLE_MESSAGE);
+  client client2 = {
+    socket : accepterClient(socketEcouteur),
+    nom : "client2",
+    estConnecte : 1
+  };
+
+  demarrerConversation(&client1, &client2, TAILLE_MESSAGE);
 
   close(socketEcouteur);
   printf("Fin du programme\n");
+  printf("client1 estConnecte : %d\n", client1.estConnecte);
 }
 
-int accepterClient(int socketEcouteur){
+int accepterClient(int socketEcouteur)
+{
   struct sockaddr_in adresseClient;
   socklen_t longueurAdrClient = sizeof(struct sockaddr_in);
   int socketClient = accept(socketEcouteur, (struct sockaddr *)&adresseClient, &longueurAdrClient);
 
   if (socketClient < 0)
-    gestionnaireErreur("Erreur de connexion");
+    gestionnaireErreur("Erreur lors de l'acceptation d'un client");
 
   printf("Client Connecté\n");
-  
+
   return socketClient;
 }
 
@@ -57,7 +62,8 @@ void gestionnaireArguments(int argc, char *argv[])
   }
 }
 
-int creerSocketEcouteur(int port, int nbClientsEnAttente) {
+int creerSocketEcouteur(int port, int nbClientsEnAttente)
+{
   int socketEcouteur = socket(PF_INET, SOCK_STREAM, 0);
 
   if (socketEcouteur < 0)
@@ -83,31 +89,34 @@ int creerSocketEcouteur(int port, int nbClientsEnAttente) {
   return socketEcouteur;
 }
 
-int demarrerConversation(struct socketClients clients, int tailleMessage) {
+int demarrerConversation(client *emetteur, client *recepteur, const int tailleMessage)
+{
   char message[tailleMessage];
 
-   while (strcmp(message, "fin") != 0)
+  while (strcmp(message, "fin") != 0)
   {
-    if (recv(clients.clientEmetteur, message, tailleMessage, 0) == 0)
+    if (recv(emetteur->socket, message, tailleMessage, 0) == 0)
       break;
 
     printf("Le message reçu: %s\n", message);
 
-    if(strcmp(message, "fin") == 0)
+    if (strcmp(message, "fin") == 0)
       break;
 
-    send(clients.clientRecepteur, message, tailleMessage, 0);
+    send(recepteur->socket, message, tailleMessage, 0);
 
     printf("Le message envoyé: %s\n", message);
 
     // Inversion des clients émetteur et recepteur
-    struct socketClients temp = clients;
-    clients.clientEmetteur = temp.clientRecepteur;
-    clients.clientRecepteur = temp.clientEmetteur;
+    client *temp = emetteur;
+    emetteur = recepteur;
+    recepteur = temp;
   }
 
-  close(clients.clientEmetteur);
-  close(clients.clientRecepteur);
+  close(emetteur->socket);
+  emetteur->estConnecte = 0;
+  close(recepteur->socket);
+  recepteur->estConnecte = 0;
   printf("Fin de la conversation\n");
   return 0;
 }

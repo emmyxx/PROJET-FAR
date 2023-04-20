@@ -11,8 +11,6 @@
 #define NB_ARGS_ATTENDUS 4
 #define TAILLE_MESSAGE 256
 
-void fermerSocketServeur(int socketServeur);
-
 int main(int argc, char *argv[])
 {
   gestionnaireArguments(argc, argv);
@@ -37,9 +35,9 @@ int main(int argc, char *argv[])
 
   while (estConnecte)
   {
-    demanderMessage(messageEnvoye);
+    entrerMessage(messageEnvoye);
     send(socketServeur, messageEnvoye, TAILLE_MESSAGE, 0);
-    estConnecte = recv(socketServeur, messageRecu, TAILLE_MESSAGE, 0) != 0;
+    estConnecte = recv(socketServeur, messageRecu, TAILLE_MESSAGE, 0) != 0; // FIXME si recv retourne une erreur, estConnecte sera à 1
     printf("Ami: %s\n", messageRecu);
   }
 
@@ -91,7 +89,7 @@ int creerConnexionServeur(const char *ipServeur, const int portServeur)
   return socketServeur;
 }
 
-void demanderMessage(char *message) {
+void entrerMessage(char *message) {
   printf("Moi: ");
   fgets(message, TAILLE_MESSAGE, stdin);
   // remplacement du caractère de nouvelle ligne par un caractère nul
