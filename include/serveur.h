@@ -5,3 +5,5 @@ struct socketClients
     int clientEmetteur;
     int clientRecepteur;
 };
+
+int demarrerConversation(struct socketClients clients, int TAILLE_MESSAGE);

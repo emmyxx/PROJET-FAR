@@ -96,5 +96,4 @@ void demanderMessage(char *message) {
   fgets(message, TAILLE_MESSAGE, stdin);
   // remplacement du caractère de nouvelle ligne par un caractère nul
   strtok(message, "\n");
-  printf("\n");
 }

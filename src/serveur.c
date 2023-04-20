@@ -21,38 +21,15 @@ int main(int argc, char *argv[])
   int socketClient1 = accepterClient(socketEcouteur);
   int socketClient2 = accepterClient(socketEcouteur);
 
-  char message[TAILLE_MESSAGE];
-
   struct socketClients clients = {
     clientEmetteur: socketClient1,
     clientRecepteur: socketClient2
   };
-  
-  while (strcmp(message, "fin") != 0)
-  {
-    if (recv(clients.clientEmetteur, message, TAILLE_MESSAGE, 0) == 0)
-      break;
 
-    printf("Le message reçu: %s\n", message);
+  demarrerConversation(clients, TAILLE_MESSAGE);
 
-    if(strcmp(message, "fin") == 0)
-      break;
-
-    send(clients.clientRecepteur, message, TAILLE_MESSAGE, 0);
-
-    printf("Le message envoyé: %s\n", message);
-
-    // Inversion des clients émetteur et recepteur
-    struct socketClients temp = clients;
-    clients.clientEmetteur = temp.clientRecepteur;
-    clients.clientRecepteur = temp.clientEmetteur;
-  }
-
-  close(socketClient1);
-  close(socketClient2);
   close(socketEcouteur);
   printf("Fin du programme\n");
-  return 0;
 }
 
 int accepterClient(int socketEcouteur){
@@ -104,4 +81,33 @@ int creerSocketEcouteur(int port, int nbClientsEnAttente) {
   printf("Mode écoute\n");
 
   return socketEcouteur;
+}
+
+int demarrerConversation(struct socketClients clients, int tailleMessage) {
+  char message[tailleMessage];
+
+   while (strcmp(message, "fin") != 0)
+  {
+    if (recv(clients.clientEmetteur, message, tailleMessage, 0) == 0)
+      break;
+
+    printf("Le message reçu: %s\n", message);
+
+    if(strcmp(message, "fin") == 0)
+      break;
+
+    send(clients.clientRecepteur, message, tailleMessage, 0);
+
+    printf("Le message envoyé: %s\n", message);
+
+    // Inversion des clients émetteur et recepteur
+    struct socketClients temp = clients;
+    clients.clientEmetteur = temp.clientRecepteur;
+    clients.clientRecepteur = temp.clientEmetteur;
+  }
+
+  close(clients.clientEmetteur);
+  close(clients.clientRecepteur);
+  printf("Fin de la conversation\n");
+  return 0;
 }
