@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <pthread.h>
 
 #include "../include/common.h"
 #include "../include/client.h"
@@ -59,6 +60,20 @@ int main(int argc, char *argv[])
 
     printf("Fin de la conversation\n");
   }
+
+  pthread_t idthread;
+
+  int thread = pthread_create(&idthread,NULL,//JSP);
+
+  if(thread != 0){
+    perror("Erreur de création du thread");
+    exit(0);
+  }
+
+  //Ecoute du ctrl c
+  signal(SIGINT, gestionSignal);
+
+  pthread_join(idthread, NULL);
 
   fermerSocketServeur(socketServeur);
   return 0;
@@ -138,4 +153,34 @@ void nettoyerBufferEntree()
   int c;
   while ((c = getchar()) != '\n' && c != EOF)
     ;
+}
+
+void gestionSignal(int sig){
+  envoiMessage(socketServeur, "fin\n");
+
+  printf("fin du programme\n");
+  exit(0);
+}
+
+int envoiMessage(int socket, char* msg){
+  int res = 0;
+  int len = strlen(msg) + 1;
+  char* message = (char*)malloc(len*sizeof(char));
+  strcpy(message,msg);
+
+  int envLen = send(socket, &len, sizeof(len),0);
+  if(envLen == -1){
+    perror("Erreur envoi taille message");
+    res = -1;
+  }
+  else {
+    int envoiMsg = send(socket, message, len, 0);
+    if(envoiMsg == -1){
+      perror("Erreur envoi message");
+      res = -1
+    }
+    else printf("Message envoyé: \n%s\n"n message);
+  }
+  free(message);
+  return res;
 }
