@@ -8,7 +8,7 @@
 #include "../include/common.h"
 #include "../include/serveur.h"
 
-#define NB_ARGS_ATTENDUS 8
+#define NB_ARGS_ATTENDUS 2
 #define TAILLE_MESSAGE 256
 
 int main(int argc, char *argv[])
