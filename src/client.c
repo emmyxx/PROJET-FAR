@@ -30,12 +30,13 @@ int main(int argc, char *argv[])
     if (recv(socketServeur, messageRecu, TAILLE_MESSAGE, 0) == 0)
       estConnecte = 0;
     else
-      printf("Ami: %s\n", messageRecu);
+      printf("Ami : %s\n", messageRecu);
   }
 
   while (estConnecte)
   {
-    entrerMessage(messageEnvoye);
+    while (entrerMessage(messageEnvoye) == -1)
+      ;
     send(socketServeur, messageEnvoye, TAILLE_MESSAGE, 0);
     estConnecte = recv(socketServeur, messageRecu, TAILLE_MESSAGE, 0) != 0; // FIXME si recv retourne une erreur, estConnecte sera à 1
     printf("Ami: %s\n", messageRecu);
@@ -89,9 +90,34 @@ int creerConnexionServeur(const char *ipServeur, const int portServeur)
   return socketServeur;
 }
 
-void entrerMessage(char *message) {
-  printf("Moi: ");
-  fgets(message, TAILLE_MESSAGE, stdin);
-  // remplacement du caractère de nouvelle ligne par un caractère nul
+int entrerMessage(char *message)
+{
+  printf("Vous : ");
+
+  if (fgets(message, TAILLE_MESSAGE, stdin) == NULL || message[0] == '\n')
+  {
+    printf("⚠️  \033[31mLe message ne peut pas être vide\033[0m\n");
+    return -1;
+  }
+
+  if (strlen(message) == TAILLE_MESSAGE - 1 && message[TAILLE_MESSAGE - 2] != '\n')
+  {
+    printf("⚠️  \033[31mLe message est trop long\033[0m\n");
+    nettoyerBufferEntree();
+    return -1;
+  }
+
+  // Remplacement du caractère de nouvelle ligne par un caractère nul
   strtok(message, "\n");
+
+  return 0;
+}
+
+// Si l'utilisateur entre plus de caractères que la taille du message, les caractères supplémentaires sont stockés dans le buffer d'entrée,
+// ce qui peut poser problème pour les prochains appels à fgets
+void nettoyerBufferEntree()
+{
+  int c;
+  while ((c = getchar()) != '\n' && c != EOF)
+    ;
 }
