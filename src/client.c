@@ -8,7 +8,7 @@
 #include "../include/common.h"
 #include "../include/client.h"
 
-#define NB_ARGS_ATTENDUS 4
+#define NB_ARGS_ATTENDUS 3
 #define TAILLE_MESSAGE 256
 
 int main(int argc, char *argv[])
@@ -17,29 +17,47 @@ int main(int argc, char *argv[])
 
   const char *ipServeur = argv[1];
   const int portServeur = atoi(argv[2]);
-  const int estClient1 = strcmp(argv[3], "client1") == 0;
 
   char messageEnvoye[TAILLE_MESSAGE];
   char messageRecu[TAILLE_MESSAGE];
 
-  int socketServeur = creerConnexionServeur(ipServeur, portServeur);
-  int estConnecte = 1;
+  const int socketServeur = creerConnexionServeur(ipServeur, portServeur);
 
-  if (!estClient1)
+  while (1)
   {
+    // Réception du message indiquant le rôle du client
     if (recv(socketServeur, messageRecu, TAILLE_MESSAGE, 0) == 0)
-      estConnecte = 0;
-    else
-      printf("Ami : %s\n", messageRecu);
-  }
+      gestionnaireErreur("Erreur lors de la communication avec le serveur");
 
-  while (estConnecte)
-  {
-    while (entrerMessage(messageEnvoye) == -1)
-      ;
-    send(socketServeur, messageEnvoye, TAILLE_MESSAGE, 0);
-    estConnecte = recv(socketServeur, messageRecu, TAILLE_MESSAGE, 0) != 0; // FIXME si recv retourne une erreur, estConnecte sera à 1
-    printf("Ami: %s\n", messageRecu);
+    const int estClient1 = strcmp(messageRecu, "client1") == 0 ? 1 : 0;
+
+    printf("Début de la conversation\n");
+
+    if (!estClient1)
+    {
+      if (recv(socketServeur, messageRecu, TAILLE_MESSAGE, 0) == 0)
+        gestionnaireErreur("Erreur lors de la communication avec le serveur");
+      if (strcmp(messageRecu, "fin") != 0)
+        printf("Ami : %s\n", messageRecu);
+    }
+
+    while (strcmp(messageRecu, "fin") != 0)
+    {
+      while (entrerMessage(messageEnvoye) == -1)
+        ;
+      send(socketServeur, messageEnvoye, TAILLE_MESSAGE, 0);
+      if (recv(socketServeur, messageRecu, TAILLE_MESSAGE, 0) == 0)
+      {
+        gestionnaireErreur("Erreur lors de la communication avec le serveur");
+      }
+      if (strcmp(messageRecu, "fin") == 0)
+      {
+        break;
+      }
+      printf("Ami: %s\n", messageRecu);
+    }
+
+    printf("Fin de la conversation\n");
   }
 
   fermerSocketServeur(socketServeur);
@@ -59,7 +77,7 @@ void gestionnaireArguments(int argc, char *argv[])
     fprintf(stderr,
             "Erreur : %d arguments attendus, mais %d ont été fournis.\n",
             NB_ARGS_ATTENDUS, argc);
-    fprintf(stderr, "Utilisation : %s <adresse_ip> <port> <client1|client2>\n", argv[0]);
+    fprintf(stderr, "Utilisation : %s <adresse_ip> <port>\n", argv[0]);
     exit(EXIT_FAILURE);
   }
 }

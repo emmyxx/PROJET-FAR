@@ -18,22 +18,41 @@ int main(int argc, char *argv[])
   const int socketEcouteur = creerSocketEcouteur(port, 2);
 
   client client1 = {
-    socket : accepterClient(socketEcouteur),
     nom : "client1",
-    estConnecte : 1
+    estConnecte : 0
   };
 
   client client2 = {
-    socket : accepterClient(socketEcouteur),
     nom : "client2",
-    estConnecte : 1
+    estConnecte : 0
   };
 
-  demarrerConversation(&client1, &client2, TAILLE_MESSAGE);
+  char message[TAILLE_MESSAGE];
+
+  while (1)
+  {
+    if (!client1.estConnecte)
+    {
+      client1.socket = accepterClient(socketEcouteur);
+      client1.estConnecte = 1;
+    }
+
+    if (!client2.estConnecte)
+    {
+      client2.socket = accepterClient(socketEcouteur);
+      client2.estConnecte = 1;
+    }
+
+    strcpy(message, "client1");
+    send(client1.socket, message, TAILLE_MESSAGE, 0);
+    strcpy(message, "client2");
+    send(client2.socket, message, TAILLE_MESSAGE, 0);
+
+    demarrerConversation(&client1, &client2, TAILLE_MESSAGE);
+  }
 
   close(socketEcouteur);
   printf("Fin du programme\n");
-  printf("client1 estConnecte : %d\n", client1.estConnecte);
 }
 
 int accepterClient(int socketEcouteur)
@@ -93,19 +112,23 @@ int demarrerConversation(client *emetteur, client *recepteur, const int tailleMe
 {
   char message[tailleMessage];
 
+  printf("Début de la conversation entre %s et %s\n", emetteur->nom, recepteur->nom);
+
   while (strcmp(message, "fin") != 0)
   {
-    if (recv(emetteur->socket, message, tailleMessage, 0) == 0)
+    if (recv(emetteur->socket, message, tailleMessage, 0) == 0 ||
+        strcmp(message, "fin") == 0)
+    {
+      close(emetteur->socket);
+      emetteur->estConnecte = 0;
+      printf("%s s'est déconnecté\n", emetteur->nom);
+      send(recepteur->socket, "fin", tailleMessage, 0);
       break;
+    }
 
-    printf("Le message reçu: %s\n", message);
-
-    if (strcmp(message, "fin") == 0)
-      break;
+    printf("%s : %s\n", emetteur->nom, message);
 
     send(recepteur->socket, message, tailleMessage, 0);
-
-    printf("Le message envoyé: %s\n", message);
 
     // Inversion des clients émetteur et recepteur
     client *temp = emetteur;
@@ -113,10 +136,6 @@ int demarrerConversation(client *emetteur, client *recepteur, const int tailleMe
     recepteur = temp;
   }
 
-  close(emetteur->socket);
-  emetteur->estConnecte = 0;
-  close(recepteur->socket);
-  recepteur->estConnecte = 0;
   printf("Fin de la conversation\n");
   return 0;
 }
