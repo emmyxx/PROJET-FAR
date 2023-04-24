@@ -9,9 +9,6 @@
 #include "../include/common.h"
 #include "../include/client.h"
 
-#define NB_ARGS_ATTENDUS 3
-#define TAILLE_MESSAGE 256
-
 int main(int argc, char *argv[])
 {
   gestionnaireArguments(argc, argv);
@@ -65,7 +62,9 @@ int creerConnexionServeur(const char *ipServeur, const int portServeur)
   // Connexion à la socket serveur
   if (connect(socketServeur, (struct sockaddr *)&adresseEcouteur, longueurAdresse) == -1)
     gestionnaireErreur("Erreur de connexion");
-  puts("Connexion au serveur réussie");
+
+  
+  
   return socketServeur;
 }
 
@@ -111,7 +110,7 @@ void *recevoirEtAfficherMessages(void *arg)
       exit(EXIT_SUCCESS);
     }
 
-    printf("Ami : %s\n", message);
+    printf("%s\n", message);
   }
 
   exit(EXIT_FAILURE);

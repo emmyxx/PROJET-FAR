@@ -1,7 +1,6 @@
 #define NB_ARGS_ATTENDUS 2
-#define TAILLE_MESSAGE 256
 #define NB_CLIENTS_EN_ATTENTE 8
-#define NB_CLIENTS_MAX 2
+#define NB_CLIENTS_MAX 3
 
 typedef struct client
 {

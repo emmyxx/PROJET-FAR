@@ -111,11 +111,16 @@ void *broadcast(void *arg)
 
     printf("%s : %s\n", args->client->nom, message);
 
+    // Coupe la taille de "message" de façon à ce qu'elle ne dépasse pas 255 caractères
+    // quand on la concatène avec le nom du client
+    char messageAvecNom[TAILLE_MESSAGE];
+    snprintf(messageAvecNom, TAILLE_MESSAGE - 1, "%s : %.*s", args->client->nom, TAILLE_MESSAGE - (int)strlen(args->client->nom), message);
+
     for (int i = 0; i < NB_CLIENTS_MAX; i++)
     {
       if (args->clients[i] != args->client && args->clients[i] != NULL)
       {
-        if (send(args->clients[i]->socket, message, TAILLE_MESSAGE, 0) < 0)
+        if (send(args->clients[i]->socket, messageAvecNom, TAILLE_MESSAGE, 0) < 0)
           gestionnaireErreur("Erreur d'envoi du message"); // FIXME ne pas faire crasher le programme
       }
     }
