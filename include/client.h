@@ -1,6 +1,12 @@
 int creerConnexionServeur(const char *ipServeur, const int portServeur);
-int entrerMessage(char *message);
 void fermerSocketServeur(int socketServeur);
+
+typedef struct argsThread {
+    int socket;
+    int tailleMessage;
+} argsThread;
+void *entrerEtEnvoyerMessages(void *arg);
+void *recevoirEtAfficherMessages(void *arg);
+
+int entrerMessage(char *message, const int tailleMessage);
 void nettoyerBufferEntree();
-void gestionSignal(int sig);
-int envoiMessage(int socket, char* msg);

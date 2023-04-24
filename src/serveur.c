@@ -4,69 +4,59 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <pthread.h>
 
 #include "../include/common.h"
 #include "../include/serveur.h"
-
-#define NB_ARGS_ATTENDUS 2
-#define TAILLE_MESSAGE 256
 
 int main(int argc, char *argv[])
 {
   gestionnaireArguments(argc, argv);
   const int port = atoi(argv[1]);
-  const int socketEcouteur = creerSocketEcouteur(port, 2);
-
-  client client1 = {
-    nom : "client1",
-    estConnecte : 0
-  };
-
-  client client2 = {
-    nom : "client2",
-    estConnecte : 0
-  };
-
-  char message[TAILLE_MESSAGE];
+  const int socketEcouteur = creerSocketEcouteur(port, NB_CLIENTS_EN_ATTENTE);
+  client *clients[NB_CLIENTS_MAX];
+  for (int i = 0; i < NB_CLIENTS_MAX; i++)
+    clients[i] = NULL;
 
   while (1)
   {
-    if (!client1.estConnecte)
+    // Accepte des clients tant que l'on n'a pas atteint la limite
+    if (avoirNombreClientsConnectes(clients) < NB_CLIENTS_MAX)
     {
-      client1.socket = accepterClient(socketEcouteur);
-      client1.estConnecte = 1;
+      client *nouveauClient = (client *)malloc(sizeof(client));
+
+      // Génère le nom du client
+      char *nomClient = NULL;
+      genererNomClient(&nomClient);
+      nouveauClient->nom = nomClient;
+
+      // Attend qu'un client se connecte
+      nouveauClient->socket = accepterClient(socketEcouteur);
+      if (nouveauClient->socket < 0)
+        gestionnaireErreur("Erreur d'acceptation du client");
+      printf("Client %s connecté\n", nouveauClient->nom);
+
+      ajouterAuTableau(clients, nouveauClient);
+
+      // Démarre le thread de broadcast, qui va recevoir le message du client et l'envoyer à tous les autres
+      pthread_t threadBroadcast;
+      argsThread *args = (argsThread *)malloc(sizeof(argsThread));
+      args->client = nouveauClient;
+      args->clients = clients;
+      pthread_create(&threadBroadcast, NULL, broadcast, args);
     }
-
-    if (!client2.estConnecte)
-    {
-      client2.socket = accepterClient(socketEcouteur);
-      client2.estConnecte = 1;
-    }
-
-    strcpy(message, "client1");
-    send(client1.socket, message, TAILLE_MESSAGE, 0);
-    strcpy(message, "client2");
-    send(client2.socket, message, TAILLE_MESSAGE, 0);
-
-    demarrerConversation(&client1, &client2, TAILLE_MESSAGE);
   }
 
   close(socketEcouteur);
   printf("Fin du programme\n");
 }
 
-int accepterClient(int socketEcouteur)
+int accepterClient(const int socketEcouteur)
 {
   struct sockaddr_in adresseClient;
   socklen_t longueurAdrClient = sizeof(struct sockaddr_in);
   int socketClient = accept(socketEcouteur, (struct sockaddr *)&adresseClient, &longueurAdrClient);
-
-  if (socketClient < 0)
-    gestionnaireErreur("Erreur lors de l'acceptation d'un client");
-
-  printf("Client Connecté\n");
-
-  return socketClient;
+  return socketClient < 0 ? -1 : socketClient;
 }
 
 void gestionnaireArguments(int argc, char *argv[])
@@ -88,8 +78,6 @@ int creerSocketEcouteur(int port, int nbClientsEnAttente)
   if (socketEcouteur < 0)
     gestionnaireErreur("Erreur de création de la socket");
 
-  printf("Socket Créé\n");
-
   struct sockaddr_in adresseEcouteur;
   adresseEcouteur.sin_family = AF_INET;
   adresseEcouteur.sin_addr.s_addr = INADDR_ANY;
@@ -98,44 +86,94 @@ int creerSocketEcouteur(int port, int nbClientsEnAttente)
   if (bind(socketEcouteur, (struct sockaddr *)&adresseEcouteur, sizeof(adresseEcouteur)) < 0)
     gestionnaireErreur("Erreur de nommage de la socket");
 
-  printf("Socket Nommé\n");
-
   if (listen(socketEcouteur, nbClientsEnAttente) < 0)
     gestionnaireErreur("Erreur de passage en mode écoute");
-
-  printf("Mode écoute\n");
 
   return socketEcouteur;
 }
 
-int demarrerConversation(client *emetteur, client *recepteur, const int tailleMessage)
+void *broadcast(void *arg)
 {
-  char message[tailleMessage];
-
-  printf("Début de la conversation entre %s et %s\n", emetteur->nom, recepteur->nom);
-
-  while (strcmp(message, "fin") != 0)
+  argsThread *args = (argsThread *)arg;
+  char message[TAILLE_MESSAGE];
+  int reponse;
+  while (1)
   {
-    if (recv(emetteur->socket, message, tailleMessage, 0) == 0 ||
-        strcmp(message, "fin") == 0)
+    reponse = recv(args->client->socket, message, TAILLE_MESSAGE, 0);
+
+    if (reponse < 0)
+      gestionnaireErreur("Erreur de réception du message"); // FIXME ne pas faire crasher le programme
+
+    if (reponse == 0 || strcmp(message, "fin") == 0)
     {
-      close(emetteur->socket);
-      emetteur->estConnecte = 0;
-      printf("%s s'est déconnecté\n", emetteur->nom);
-      send(recepteur->socket, "fin", tailleMessage, 0);
       break;
     }
 
-    printf("%s : %s\n", emetteur->nom, message);
+    printf("%s : %s\n", args->client->nom, message);
 
-    send(recepteur->socket, message, tailleMessage, 0);
-
-    // Inversion des clients émetteur et recepteur
-    client *temp = emetteur;
-    emetteur = recepteur;
-    recepteur = temp;
+    for (int i = 0; i < NB_CLIENTS_MAX; i++)
+    {
+      if (args->clients[i] != args->client && args->clients[i] != NULL)
+      {
+        if (send(args->clients[i]->socket, message, TAILLE_MESSAGE, 0) < 0)
+          gestionnaireErreur("Erreur d'envoi du message"); // FIXME ne pas faire crasher le programme
+      }
+    }
   }
 
-  printf("Fin de la conversation\n");
+  printf("Fin de la connexion avec le client %s\n", args->client->nom);
+  close(args->client->socket);
+  supprimerDuTableau(args->clients, args->client);
+  pthread_exit(NULL);
+}
+
+int genererNomClient(char **nomClient)
+{
+  *nomClient = (char *)malloc(sizeof(char) * 11);
+  if (*nomClient == NULL)
+    return -1;
+  int nombreAleatoire = 1 + rand() % (1000 - 1 + 1);
+  sprintf(*nomClient, "client%d", nombreAleatoire);
   return 0;
+}
+
+int avoirNombreClientsConnectes(client **clients)
+{
+  int nbClientsConnectes = 0;
+  for (int i = 0; i < NB_CLIENTS_MAX; i++)
+  {
+    if (clients[i] != 0)
+    {
+      nbClientsConnectes++;
+    }
+  }
+  return nbClientsConnectes;
+}
+
+int ajouterAuTableau(client **clients, client *clientAAjouter)
+{
+  for (int i = 0; i < NB_CLIENTS_MAX; i++)
+  {
+    if (clients[i] == NULL)
+    {
+      clients[i] = clientAAjouter;
+      return 0;
+    }
+  }
+  return -1;
+}
+
+int supprimerDuTableau(client **clients, client *clientASupprimer)
+{
+  for (int i = 0; i < NB_CLIENTS_MAX; i++)
+  {
+    if (clients[i] == clientASupprimer)
+    {
+      free(clients[i]->nom);
+      free(clients[i]);
+      clients[i] = NULL;
+      return 0;
+    }
+  }
+  return -1;
 }
