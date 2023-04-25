@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
   for (int i = 0; i < NB_CLIENTS_MAX; i++)
     clients[i] = NULL;
 
-  while (1)
+  while (true)
   {
     // Accepte des clients tant que l'on n'a pas atteint la limite
     if (avoirNombreClientsConnectes(clients) < NB_CLIENTS_MAX)
@@ -89,7 +89,7 @@ void *broadcast(void *arg)
   argsThread *args = (argsThread *)arg;
   char message[TAILLE_MESSAGE];
   int reponse;
-  while (1)
+  while (true)
   {
     reponse = recv(args->client->socket, message, TAILLE_MESSAGE, 0);
 

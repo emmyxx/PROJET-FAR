@@ -81,7 +81,7 @@ void *recevoirEtAfficherMessages(void *arg)
   char message[args->tailleMessage];
   int reponse = 1;
 
-  while (1)
+  while (true)
   {
     reponse = recv(args->socket, message, args->tailleMessage, 0);
 
@@ -90,7 +90,7 @@ void *recevoirEtAfficherMessages(void *arg)
 
     if (reponse == 0)
     {
-      puts("⚠️  \033[31mUne erreur serveur est survenue, vous avez été déconnecté\033[0m.");
+      puts("⚠️  \033[31mUne erreur serveur est survenue, vous avez été déconnecté.\033[0m");
       exit(EXIT_FAILURE);
     }
 
