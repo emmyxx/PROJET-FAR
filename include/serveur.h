@@ -1,3 +1,11 @@
+#include <stdio.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <pthread.h>
+
 #define NB_ARGS_ATTENDUS 2
 #define NB_CLIENTS_EN_ATTENTE 8
 #define NB_CLIENTS_MAX 3

@@ -1,11 +1,3 @@
-#include <stdio.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <pthread.h>
-
 #include "../include/common.h"
 #include "../include/client.h"
 
@@ -29,6 +21,7 @@ int main(int argc, char *argv[])
   pthread_join(threadEnvoyer, NULL);
   pthread_join(threadRecevoir, NULL);
 
+  close(socketServeur);
   return 0;
 }
 
@@ -54,7 +47,6 @@ int creerConnexionServeur(const char *ipServeur, const int portServeur)
   // Configuration de l'adresse du serveur
   struct sockaddr_in adresseEcouteur;
   adresseEcouteur.sin_family = AF_INET;
-  // inet_pton convertit une chaîne de caractères représentant une adresse IP en une adresse réseau
   inet_pton(AF_INET, ipServeur, &(adresseEcouteur.sin_addr));
   adresseEcouteur.sin_port = htons(portServeur);
   socklen_t longueurAdresse = sizeof(struct sockaddr_in);
@@ -63,8 +55,6 @@ int creerConnexionServeur(const char *ipServeur, const int portServeur)
   if (connect(socketServeur, (struct sockaddr *)&adresseEcouteur, longueurAdresse) == -1)
     gestionnaireErreur("Erreur de connexion");
 
-  
-  
   return socketServeur;
 }
 

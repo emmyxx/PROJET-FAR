@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 
 #define TAILLE_MESSAGE 256
 
