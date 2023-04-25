@@ -94,12 +94,6 @@ void *recevoirEtAfficherMessages(void *arg)
       exit(EXIT_FAILURE);
     }
 
-    if (strcmp(message, "fin") == 0)
-    {
-      puts("Vous avez quitté la conversation");
-      exit(EXIT_SUCCESS);
-    }
-
     printf("%s\n", message);
   }
 
