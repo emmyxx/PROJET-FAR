@@ -6,16 +6,17 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <stdbool.h>
+#include <errno.h>
 
 #include "../src/common.c"
 
 // Le nombre maximum de caractères qu'un client peut écrire sur le chat.
-#define CLIENT_TAILLE_MESSAGE 256
+#define TAILLE_SAISIE_CLIENT 256
 // La taille maximale des arguments d'un message. Par exemple, pour un message privé,
 // les arguments sont le nom de l'envoyeur et du destinataire.
-#define TAILLE_ARGUMENTS_MESSAGE 64
+#define TAILLE_ENTETE 64
 // La taille des messages envoyés en TCP
-#define TCP_TAILLE_MESSAGE CLIENT_TAILLE_MESSAGE + TAILLE_ARGUMENTS_MESSAGE
+#define TAILLE_MESSAGE_TCP TAILLE_SAISIE_CLIENT + TAILLE_ENTETE
 
 void gestionnaireErreur(const char *message);
 void gestionnaireArguments(int argc, char *argv[]);
@@ -28,7 +29,7 @@ void gestionnaireArguments(int argc, char *argv[]);
  * @param tailleMessage Taille du message (terminateur '\0' compris).
  * Doit être strictement supérieure à 1.
  * @return Le pointeur premier mot extrait de la chaîne de caractères ou NULL si
- * si la chaîne commence par un terminateur \0.
+ * la chaîne commence par un terminateur \0.
  * @warning Le premier " " après le premier mot est remplacé par le terminateur '\0'.
  */
 char *avoirPremierMot(char **curseur, char *message, const int tailleMessage);

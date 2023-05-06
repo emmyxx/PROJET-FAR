@@ -9,7 +9,7 @@ char *avoirPremierMot(char **curseur, char *message, const int tailleMessage)
   if (tailleMessage < 2)
   {
     fprintf(stderr, "Le message doit contenir au moins 2 caractères (terminateur '\\0' compris).\n");
-    exit(EXIT_FAILURE);
+    return NULL;
   }
 
   if (message[0] == '\0')

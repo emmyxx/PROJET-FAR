@@ -59,13 +59,13 @@ int creerConnexionServeur(const char *ipServeur, const int portServeur)
 void *entrerEtEnvoyerMessages(void *arg)
 {
   int socketServeur = *(int *)arg;
-  char message[TCP_TAILLE_MESSAGE];
+  char message[TAILLE_MESSAGE_TCP];
 
   while (strcmp(message, "fin") != 0)
   {
-    while (entrerMessage(message, CLIENT_TAILLE_MESSAGE) == -1)
+    while (entrerMessage(message, TAILLE_SAISIE_CLIENT) == -1)
       ;
-    if (send(socketServeur, message, TCP_TAILLE_MESSAGE, 0) < 0)
+    if (send(socketServeur, message, TAILLE_MESSAGE_TCP, 0) < 0)
       gestionnaireErreur("Erreur lors de l'envoi du message");
   }
 
@@ -76,12 +76,12 @@ void *entrerEtEnvoyerMessages(void *arg)
 void *recevoirEtAfficherMessages(void *arg)
 {
   int socketServeur = *(int *)arg;
-  char message[TCP_TAILLE_MESSAGE];
+  char message[TAILLE_MESSAGE_TCP];
   int reponse = 1;
 
   while (true)
   {
-    reponse = recv(socketServeur, message, TCP_TAILLE_MESSAGE, 0);
+    reponse = recv(socketServeur, message, TAILLE_MESSAGE_TCP, 0);
 
     if (reponse < 0)
       gestionnaireErreur("Erreur lors de la reception du message");
@@ -116,7 +116,6 @@ int entrerMessage(char *message, const int tailleMessage)
 
   // Remplacement du caractère de nouvelle ligne par un caractère nul
   strtok(message, "\n");
-
   return 0;
 }
 
@@ -127,4 +126,75 @@ void nettoyerBufferEntree()
   int c;
   while ((c = getchar()) != '\n' && c != EOF)
     ;
+}
+
+char *formaterSaisieClient(char *messageTCP, const char *saisie)
+{
+  // Remplit messageTCP de '\0' (au cas où il y aurait des caractères résiduels)
+  memset(messageTCP, '\0', TAILLE_MESSAGE_TCP);
+
+  char *copieSaisie = strdup(saisie);
+
+  const char *nomCommande = strtok(copieSaisie, " ");
+
+  if (nomCommande == NULL)
+  {
+    errno = EINVAL;
+    free(copieSaisie);
+    return NULL;
+  }
+
+  // Empêche le programme de planter lors de la création de saisieSansCommande
+  // si l'utilisateur entre une commande trop longue
+  if (strlen(nomCommande) >= TAILLE_SAISIE_CLIENT - 1)
+  {
+    errno = EINVAL;
+    free(copieSaisie);
+    return NULL;
+  }
+
+  // "/mp pseudo message" -> "pseudo message"
+  char *saisieSansCommande = copieSaisie + strlen(nomCommande) + 2;
+
+  // S'il n'y a pas de commande
+  if (saisie[0] != '/')
+    messageTCP = formaterEnBroadcast(messageTCP, saisieSansCommande);
+
+  else if (strcmp(nomCommande, "/pseudo") == 0)
+    messageTCP = formaterEnPseudo(messageTCP, saisieSansCommande);
+
+  // Si la saisie du client ne respecte pas la syntaxe d'une commande
+  if (messageTCP == NULL || messageTCP[0] == '\0')
+  {
+    errno = EINVAL;
+    free(copieSaisie);
+    return NULL;
+  }
+
+  // DEBUG
+  printf("messageTCP : %s\n", messageTCP);
+
+  return messageTCP;
+}
+
+char *formaterEnBroadcast(char *messageTCP, char *saisieClient)
+{
+  strcat(messageTCP, "MESSAGE_BROADCAST ");
+  strcat(messageTCP, saisieClient);
+  return messageTCP;
+}
+
+char *formaterEnPseudo(char *messageTCP, char *saisieClient)
+{
+  const char *pseudo = strtok(saisieClient, " ");
+  if (pseudo == NULL)
+  {
+    errno = EINVAL;
+    return NULL;
+  }
+
+  strcat(messageTCP, "PSEUDO ");
+  strcat(messageTCP, pseudo);
+
+  return messageTCP;
 }
