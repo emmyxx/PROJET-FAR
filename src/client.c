@@ -153,15 +153,15 @@ char *formaterSaisieClient(char *messageTCP, const char *saisie)
     return NULL;
   }
 
-  // "/mp pseudo message" -> "pseudo message"
-  char *saisieSansCommande = copieSaisie + strlen(nomCommande) + 2;
-
   // S'il n'y a pas de commande
-  if (saisie[0] != '/')
-    messageTCP = formaterEnBroadcast(messageTCP, saisieSansCommande);
+  if (copieSaisie[0] != '/')
+    messageTCP = formaterEnBroadcast(messageTCP, copieSaisie);
 
-  else if (strcmp(nomCommande, "/pseudo") == 0)
-    messageTCP = formaterEnPseudo(messageTCP, saisieSansCommande);
+  // "/mp pseudo message" -> "pseudo message"
+  char *saisieSansCommande = copieSaisie + strlen(nomCommande) + 1;
+
+  if (strcmp(nomCommande, "/pseudo") == 0)
+      messageTCP = formaterEnPseudo(messageTCP, saisieSansCommande);
 
   // Si la saisie du client ne respecte pas la syntaxe d'une commande
   if (messageTCP == NULL || messageTCP[0] == '\0')
