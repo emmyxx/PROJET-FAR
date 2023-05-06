@@ -87,11 +87,11 @@ int creerSocketEcouteur(int port, int nbClientsEnAttente)
 void *broadcast(void *arg)
 {
   argsThread *args = (argsThread *)arg;
-  char message[TAILLE_MESSAGE];
+  char message[TCP_TAILLE_MESSAGE];
   int reponse;
   while (true)
   {
-    reponse = recv(args->client->socket, message, TAILLE_MESSAGE, 0);
+    reponse = recv(args->client->socket, message, TCP_TAILLE_MESSAGE, 0);
 
     if (reponse < 0)
       gestionnaireErreur("Erreur de réception du message"); // FIXME ne pas faire crasher le programme
@@ -105,14 +105,14 @@ void *broadcast(void *arg)
 
     // Coupe la taille de "message" de façon à ce qu'elle ne dépasse pas 255 caractères
     // quand on la concatène avec le nom du client
-    char messageAvecNom[TAILLE_MESSAGE];
-    snprintf(messageAvecNom, TAILLE_MESSAGE - 1, "%s : %.*s", args->client->nom, TAILLE_MESSAGE - (int)strlen(args->client->nom), message);
+    char messageAvecNom[TCP_TAILLE_MESSAGE];
+    snprintf(messageAvecNom, TCP_TAILLE_MESSAGE - 1, "%s : %.*s", args->client->nom, TCP_TAILLE_MESSAGE - (int)strlen(args->client->nom), message);
 
     for (int i = 0; i < NB_CLIENTS_MAX; i++)
     {
       if (args->clients[i] != args->client && args->clients[i] != NULL)
       {
-        if (send(args->clients[i]->socket, messageAvecNom, TAILLE_MESSAGE, 0) < 0)
+        if (send(args->clients[i]->socket, messageAvecNom, TCP_TAILLE_MESSAGE, 0) < 0)
           gestionnaireErreur("Erreur d'envoi du message"); // FIXME ne pas faire crasher le programme
       }
     }

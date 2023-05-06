@@ -7,15 +7,13 @@ int main(int argc, char *argv[])
 
   const char *ipServeur = argv[1];
   const int portServeur = atoi(argv[2]);
-  const int socketServeur = creerConnexionServeur(ipServeur, portServeur);
+  int socketServeur = creerConnexionServeur(ipServeur, portServeur);
 
   pthread_t threadRecevoir, threadEnvoyer;
-  argsThread args = {socketServeur, TAILLE_MESSAGE};
-
-  if (pthread_create(&threadEnvoyer, NULL, entrerEtEnvoyerMessages, &args) != 0)
+  if (pthread_create(&threadEnvoyer, NULL, entrerEtEnvoyerMessages, &socketServeur) != 0)
     gestionnaireErreur("Erreur lors de la création du thread d'envoi");
 
-  if (pthread_create(&threadRecevoir, NULL, recevoirEtAfficherMessages, &args) != 0)
+  if (pthread_create(&threadRecevoir, NULL, recevoirEtAfficherMessages, &socketServeur) != 0)
     gestionnaireErreur("Erreur lors de la création du thread de réception");
 
   pthread_join(threadEnvoyer, NULL);
@@ -60,14 +58,14 @@ int creerConnexionServeur(const char *ipServeur, const int portServeur)
 
 void *entrerEtEnvoyerMessages(void *arg)
 {
-  argsThread *args = (argsThread *)arg;
-  char message[args->tailleMessage];
+  int socketServeur = *(int *)arg;
+  char message[TCP_TAILLE_MESSAGE];
 
   while (strcmp(message, "fin") != 0)
   {
-    while (entrerMessage(message, args->tailleMessage) == -1)
+    while (entrerMessage(message, CLIENT_TAILLE_MESSAGE) == -1)
       ;
-    if (send(args->socket, message, args->tailleMessage, 0) < 0)
+    if (send(socketServeur, message, TCP_TAILLE_MESSAGE, 0) < 0)
       gestionnaireErreur("Erreur lors de l'envoi du message");
   }
 
@@ -77,13 +75,13 @@ void *entrerEtEnvoyerMessages(void *arg)
 
 void *recevoirEtAfficherMessages(void *arg)
 {
-  argsThread *args = (argsThread *)arg;
-  char message[args->tailleMessage];
+  int socketServeur = *(int *)arg;
+  char message[TCP_TAILLE_MESSAGE];
   int reponse = 1;
 
   while (true)
   {
-    reponse = recv(args->socket, message, args->tailleMessage, 0);
+    reponse = recv(socketServeur, message, TCP_TAILLE_MESSAGE, 0);
 
     if (reponse < 0)
       gestionnaireErreur("Erreur lors de la reception du message");
@@ -104,6 +102,7 @@ int entrerMessage(char *message, const int tailleMessage)
 {
   if (fgets(message, tailleMessage, stdin) == NULL || message[0] == '\n')
   {
+    // TODO standardiser messages d'erreurs en utilisant une fonction dédiée
     printf("⚠️  \033[31mLe message ne peut pas être vide\033[0m\n");
     return -1;
   }
