@@ -5,7 +5,7 @@
 
 ### Sprint 2
 - Les clients peuvent avoir un pseudonyme ✅
-- Les clients peuvent envoyer des messages privés
-- Les clients peuvent quitter une conversation
+- Les clients peuvent envoyer des messages privés ✅
+- Les clients peuvent quitter une conversation ✅
 - Les clients peuvent afficher les commandes disponibles
 - On doit utiliser un mutex sur le tableau des clients

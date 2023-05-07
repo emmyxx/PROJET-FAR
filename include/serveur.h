@@ -33,17 +33,6 @@ typedef struct argsThread
 int accepterClient(const int socketEcouteur);
 
 /**
- * @brief Génère un nom de client et l'alloue dans la mémoire. Le but est de différencier les clients.
- *
- * Cette fonction génère un nom de client sous la forme "clientX", où X est un nombre aléatoire
- * entre 1 et 1000. Le nom généré est ensuite alloué en mémoire.
- *
- * @param nomClient Pointeur vers le nom du client généré.
- * @return int Retourne -1 en cas d'échec de l'allocation de mémoire, 0 sinon.
- */
-int genererNomClient(char **nomClient);
-
-/**
  * @brief Calcule le nombre de clients connectés dans le tableau des clients.
  * @param clients Pointeur vers un tableau de pointeurs de structures client.
  * @return int Retourne le nombre de clients connectés,
@@ -76,6 +65,7 @@ int routageMessageRecu(client **listeClients, client *clientCourant, void *messa
 int controlleurConnexion(const client **listeClients, client *clientCourant, void *message);
 int controlleurMessageBroadcast(const client **listeClients, const client *clientCourant, MessageBroadcast messageBroadcast);
 int controlleurAttributionPseudo(const client **listeClients, client *clientCourant, AttributionPseudo pseudo);
+int controlleurMessagePrive(const client **listeClients, const client *clientCourant, MessagePrive messagePrive);
 int envoyerMessageAlerte(const client *clientCourant, char *message, TypeAlerte niveauAlerte);
-bool estPseudoValide(const client **listeClients, const char *pseudo);
+bool pseudoExiste(const client **listeClients, const char *pseudo);
 int broadcast(const client **listeClients, const client *clientCourant, const void *messageFormate);

@@ -4,9 +4,11 @@
 
 
 /* -------------------------------------------------------------------------- */
-/*                           Mise en place du client                          */
+/*                           Divers                                           */
 /* -------------------------------------------------------------------------- */
 int creerConnexionServeur(const char *ipServeur, const int portServeur);
+void gestionnaireSignal(int signum);
+void arreterCommunication();
 
 
 /* -------------------------------------------------------------------------- */
@@ -16,6 +18,7 @@ void *receptionMessages(void *arg);
 int routageMessageRecu(void *messageRecu);
 int recevoirMessageBroadcast(const MessageBroadcast messageBroadcast);
 int afficherMessageAlerte(char *message, TypeAlerte typeAlerte);
+int recevoirMessagePrive(const MessagePrive messagePrive);
 
 
 /* -------------------------------------------------------------------------- */

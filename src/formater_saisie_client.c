@@ -25,6 +25,29 @@ static AttributionPseudo *formaterEnPseudo(char *saisieClient)
     return attributionPseudo;
 }
 
+static MessagePrive *formaterEnMessagePrive(char *saisieClient)
+{    
+    const char *pseudoDestinataire = strtok(saisieClient, " ");
+    if (pseudoDestinataire == NULL)
+    {
+        errno = EINVAL;
+        return NULL;
+    }
+
+    MessagePrive *messagePrive = (MessagePrive *)malloc(sizeof(MessagePrive));
+    messagePrive->typeMessage = MESSAGE_PRIVE;
+    strcpy(messagePrive->destinataire, pseudoDestinataire);
+    char *message = strtok(NULL, "");
+    if (message == NULL)
+    {
+        errno = EINVAL;
+        return NULL;
+    }
+    strcpy(messagePrive->message, message);
+
+    return messagePrive;
+}
+
 void *formaterSaisieClient(char *saisie)
 {
     // S'il n'y a pas de commande
@@ -52,6 +75,15 @@ void *formaterSaisieClient(char *saisie)
 
     if (strcmp(nomCommande, "/pseudo") == 0)
         return formaterEnPseudo(saisieSansCommande);
+
+    if (strcmp(nomCommande, "/fin") == 0)
+    {
+        printf("\nDeconnexion de la messagerie.\n");
+        exit(EXIT_SUCCESS);
+    }
+
+    if (strcmp(nomCommande, "/mp") == 0)
+        return formaterEnMessagePrive(saisieSansCommande);
 
     errno = EINVAL;
     return NULL;

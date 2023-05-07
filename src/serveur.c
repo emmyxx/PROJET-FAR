@@ -19,11 +19,6 @@ int main(int argc, char *argv[])
     {
       client *nouveauClient = (client *)malloc(sizeof(client));
 
-      // Génère le nom du client
-      // char *nomClient = NULL;
-      // genererNomClient(&nomClient);
-      // strcpy(nouveauClient->nom, nomClient);
-
       // Attend qu'un client se connecte
       nouveauClient->socket = accepterClient(socketEcouteur);
       if (nouveauClient->socket < 0)
@@ -117,7 +112,7 @@ void *receptionMessages(void *arg)
     routageMessageRecu(listeClients, clientCourant, message);
   }
 
-  printf("Fin de la connexion avec le client %s\n", args->client->nom);
+  printf("%s s'est déconnecté(e).\n", args->client->nom);
   close(args->client->socket);
   supprimerDuTableau(args->clients, args->client);
   pthread_exit(NULL);
@@ -139,6 +134,12 @@ int routageMessageRecu(client **listeClients, client *clientCourant, void *messa
     return controlleurAttributionPseudo((const client **)listeClients, clientCourant, pseudo);
   }
 
+  if (typeMessage == MESSAGE_PRIVE)
+  {
+    MessagePrive messagePrive = *(MessagePrive *)message;
+    return controlleurMessagePrive((const client **)listeClients, (const client *)clientCourant, messagePrive);
+  }
+
   return -1;
 }
 
@@ -154,18 +155,18 @@ int controlleurConnexion(const client **listeClients, client *clientCourant, voi
 
   AttributionPseudo pseudo = *(AttributionPseudo *)message;
 
-  if (!estPseudoValide(listeClients, pseudo.pseudo))
+  if (pseudoExiste(listeClients, pseudo.pseudo))
   {
     envoyerMessageAlerte(clientCourant, "Ce pseudonyme est déjà utilisé.", ERREUR);
     clientCourant->estConnecte = false;
     return -1;
   }
 
-  // Créer un string qui contient le message de bienvenue
+  printf("%s s'est connecté(e).\n", pseudo.pseudo);
   char messageBienvenue[TAILLE_MESSAGE_TCP];
   sprintf(messageBienvenue, "Bienvenue %s !", pseudo.pseudo);
   envoyerMessageAlerte(clientCourant, messageBienvenue, INFORMATION);
-  // TODO broadcast de l'arrivée du client
+  // TODO indiquer à tous les clients que le nouveau client s'est connecté
   strcpy(clientCourant->nom, pseudo.pseudo);
   return 0;
 }
@@ -180,7 +181,7 @@ int controlleurMessageBroadcast(const client **listeClients, const client *clien
 
 int controlleurAttributionPseudo(const client **listeClients, client *clientCourant, AttributionPseudo pseudo)
 {
-  if (!estPseudoValide(listeClients, pseudo.pseudo))
+  if (pseudoExiste(listeClients, pseudo.pseudo))
   {
     envoyerMessageAlerte(clientCourant, "Ce pseudonyme est déjà utilisé.", AVERTISSEMENT);
     return -1;
@@ -190,17 +191,46 @@ int controlleurAttributionPseudo(const client **listeClients, client *clientCour
   return 0;
 }
 
-bool estPseudoValide(const client **listeClients, const char *pseudo)
+int controlleurMessagePrive(const client **listeClients, const client *clientCourant, MessagePrive messagePrive)
+{
+  if (strcmp(messagePrive.destinataire, clientCourant->nom) == 0)
+  {
+    envoyerMessageAlerte(clientCourant, "Vous ne pouvez pas vous envoyer un message privé.", AVERTISSEMENT);
+    return -1;
+  }
+
+  if (messagePrive.message == NULL || strlen(messagePrive.message) == 0)
+  {
+    envoyerMessageAlerte(clientCourant, "Vous ne pouvez pas envoyer un message vide.", AVERTISSEMENT);
+    return -1;
+  }
+
+  strcpy(messagePrive.expediteur, clientCourant->nom);
+  for (int i = 0; i < NB_CLIENTS_MAX; i++)
+  {
+    if (listeClients[i] != NULL && strcmp(listeClients[i]->nom, messagePrive.destinataire) == 0)
+    {
+      if (send(listeClients[i]->socket, &messagePrive, TAILLE_MESSAGE_TCP, 0) < 0)
+        return -1;
+      return 0;
+    }
+  }
+
+  envoyerMessageAlerte(clientCourant, "Ce client n'existe pas.", AVERTISSEMENT);
+  return -1;
+}
+
+bool pseudoExiste(const client **listeClients, const char *pseudo)
 {
   for (int i = 0; i < NB_CLIENTS_MAX; i++)
   {
     if (listeClients[i] != NULL && strcmp(listeClients[i]->nom, pseudo) == 0)
     {
-      return false;
+      return true;
     }
   }
 
-  return true;
+  return false;
 }
 
 int envoyerMessageAlerte(const client *clientCourant, char *message, TypeAlerte typeAlerte)
@@ -225,16 +255,6 @@ int broadcast(const client **listeClients, const client *clientCourant, const vo
     }
   }
 
-  return 0;
-}
-
-int genererNomClient(char **nomClient)
-{
-  *nomClient = (char *)malloc(sizeof(char) * 11);
-  if (*nomClient == NULL)
-    return -1;
-  int nombreAleatoire = 1 + rand() % (1000 - 1 + 1);
-  sprintf(*nomClient, "client%d", nombreAleatoire);
   return 0;
 }
 

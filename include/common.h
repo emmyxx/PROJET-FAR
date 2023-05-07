@@ -10,6 +10,7 @@
 #include <pthread.h>
 #include <stdbool.h>
 #include <errno.h>
+#include <signal.h>
 
 // Le nombre maximum de caractères qu'un client peut écrire sur le chat.
 #define TAILLE_SAISIE_CLIENT 1024
@@ -27,6 +28,7 @@ typedef enum
     PSEUDO,
     MESSAGE_ALERTE,
     MESSAGE_SERVEUR,
+    MESSAGE_PRIVE,
 } TypeMessage;
 
 typedef enum
@@ -55,6 +57,14 @@ typedef struct
     TypeAlerte typeAlerte;
     char message[TAILLE_SAISIE_CLIENT];
 } MessageAlerte;
+
+typedef struct
+{
+    TypeMessage typeMessage;
+    char expediteur[TAILLE_PSEUDO];
+    char destinataire[TAILLE_PSEUDO];
+    char message[TAILLE_SAISIE_CLIENT];
+} MessagePrive;
 
 void gestionnaireErreur(const char *message);
 void gestionnaireArguments(int argc, char *argv[]);

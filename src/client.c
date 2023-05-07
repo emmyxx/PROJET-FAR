@@ -5,6 +5,9 @@ int main(int argc, char *argv[])
 {
   gestionnaireArguments(argc, argv);
 
+  // Gestion du CTRL+C
+  signal(SIGINT, gestionnaireSignal);
+
   const char *ipServeur = argv[1];
   const int portServeur = atoi(argv[2]);
   char *pseudo = argv[3];
@@ -73,7 +76,7 @@ void *envoiMessages(void *arg)
   int socketServeur = *(int *)arg;
   char saisieClient[TAILLE_SAISIE_CLIENT];
 
-  while (strcmp(saisieClient, "fin") != 0)
+  while (true)
   {
     char *messageFormate = NULL;
 
@@ -90,8 +93,7 @@ void *envoiMessages(void *arg)
     free(messageFormate);
   }
 
-  puts("Vous avez quitté la conversation");
-  exit(EXIT_SUCCESS);
+  exit(EXIT_FAILURE);
 }
 
 void *receptionMessages(void *arg)
@@ -137,6 +139,13 @@ int routageMessageRecu(void *messageRecu)
     return 0;
   }
 
+  if (typeMessage == MESSAGE_PRIVE)
+  {
+    MessagePrive messagePrive = *(MessagePrive *)messageRecu;
+    recevoirMessagePrive(messagePrive);
+    return 0;
+  }
+
   return -1;
 }
 
@@ -169,6 +178,12 @@ int afficherMessageAlerte(char *message, TypeAlerte typeAlerte)
   }
 }
 
+int recevoirMessagePrive(const MessagePrive messagePrive)
+{
+  printf("\033[0;34m%s : %s\033[0m\n", messagePrive.expediteur, messagePrive.message);
+  return 0;
+}
+
 int entrerMessage(char *message, const int tailleMessage)
 {
   if (fgets(message, tailleMessage, stdin) == NULL || message[0] == '\n')
@@ -197,4 +212,18 @@ void nettoyerBufferEntree()
   int c;
   while ((c = getchar()) != '\n' && c != EOF)
     ;
+}
+
+void gestionnaireSignal(int signum)
+{
+  if (signum == SIGINT)
+  {
+    arreterCommunication();
+  }
+}
+
+void arreterCommunication()
+{
+  printf("\nDeconnexion de la messagerie.\n");
+  exit(EXIT_SUCCESS);
 }
