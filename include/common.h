@@ -21,6 +21,26 @@
 #define TAILLE_MESSAGE_TCP TAILLE_SAISIE_CLIENT + TAILLE_ENTETE
 #define TAILLE_PSEUDO 20
 
+typedef enum
+{
+    MESSAGE_BROADCAST,
+    MESSAGE_PRIVE,
+    PSEUDO,
+} TypeMessage;
+
+typedef struct
+{
+    TypeMessage typeMessage;
+    char expediteur[TAILLE_PSEUDO];
+    char message[TAILLE_SAISIE_CLIENT];
+} MessageBroadcast;
+
+typedef struct
+{
+    TypeMessage typeMessage;
+    char pseudo[TAILLE_PSEUDO];
+} AttributionPseudo;
+
 void gestionnaireErreur(const char *message);
 void gestionnaireArguments(int argc, char *argv[]);
 

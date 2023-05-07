@@ -1,12 +1,26 @@
-#include "../include/protocole.h"
+#include "../include/formater_saisie_client.h"
 
 #define NB_ARGS_ATTENDUS 3
 
-int creerConnexionServeur(const char *ipServeur, const int portServeur);
-void fermerSocketServeur(int socketServeur);
-void *entrerEtEnvoyerMessages(void *arg);
-void *recevoirEtAfficherMessages(void *arg);
 
+/* -------------------------------------------------------------------------- */
+/*                           Mise en place du client                          */
+/* -------------------------------------------------------------------------- */
+int creerConnexionServeur(const char *ipServeur, const int portServeur);
+
+
+/* -------------------------------------------------------------------------- */
+/*                    Réception et traitement des messages                    */
+/* -------------------------------------------------------------------------- */
+void *receptionMessages(void *arg);
+int routageMessageRecu(void *messageRecu);
+int recevoirMessageBroadcast(const MessageBroadcast messageBroadcast);
+
+
+/* -------------------------------------------------------------------------- */
+/*                  Saisie, formattage et envoi des messages                  */
+/* -------------------------------------------------------------------------- */
+void *envoiMessages(void *arg);
 /**
  * @brief Lit une chaîne de caractères à partir de l'entrée standard.
  * @param message La chaîne de caractères lue depuis l'entrée standard.
@@ -16,6 +30,3 @@ void *recevoirEtAfficherMessages(void *arg);
  */
 int entrerMessage(char *message, const int tailleMessage);
 void nettoyerBufferEntree();
-
-int routageMessageRecu(void *messageRecu);
-int recevoirMessageBroadcast(const MessageBroadcast messageBroadcast);

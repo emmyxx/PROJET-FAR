@@ -10,10 +10,10 @@ int main(int argc, char *argv[])
   int socketServeur = creerConnexionServeur(ipServeur, portServeur);
 
   pthread_t threadRecevoir, threadEnvoyer;
-  if (pthread_create(&threadEnvoyer, NULL, entrerEtEnvoyerMessages, &socketServeur) != 0)
+  if (pthread_create(&threadEnvoyer, NULL, envoiMessages, &socketServeur) != 0)
     gestionnaireErreur("Erreur lors de la création du thread d'envoi");
 
-  if (pthread_create(&threadRecevoir, NULL, recevoirEtAfficherMessages, &socketServeur) != 0)
+  if (pthread_create(&threadRecevoir, NULL, receptionMessages, &socketServeur) != 0)
     gestionnaireErreur("Erreur lors de la création du thread de réception");
 
   pthread_join(threadEnvoyer, NULL);
@@ -56,7 +56,7 @@ int creerConnexionServeur(const char *ipServeur, const int portServeur)
   return socketServeur;
 }
 
-void *entrerEtEnvoyerMessages(void *arg)
+void *envoiMessages(void *arg)
 {
   int socketServeur = *(int *)arg;
   char saisieClient[TAILLE_SAISIE_CLIENT];
@@ -82,7 +82,7 @@ void *entrerEtEnvoyerMessages(void *arg)
   exit(EXIT_SUCCESS);
 }
 
-void *recevoirEtAfficherMessages(void *arg)
+void *receptionMessages(void *arg)
 {
   int socketServeur = *(int *)arg;
   char messageRecu[TAILLE_MESSAGE_TCP];
@@ -123,7 +123,6 @@ int routageMessageRecu(void *messageRecu)
 
 int recevoirMessageBroadcast(const MessageBroadcast messageBroadcast) {
   printf("%s : %s\n", messageBroadcast.expediteur, messageBroadcast.message);
-
   return 0;
 }
 

@@ -1,25 +1,29 @@
-#include "../include/protocole.h"
-
 #define NB_ARGS_ATTENDUS 2
 #define NB_CLIENTS_EN_ATTENTE 8
 #define NB_CLIENTS_MAX 3
 
+
+/* -------------------------------------------------------------------------- */
+/*                          Mise en place du serveur                          */
+/* -------------------------------------------------------------------------- */
+int creerSocketEcouteur(int port, int nbClientsEnAttente);
+
+
+/* -------------------------------------------------------------------------- */
+/*                             Gestion des clients                            */
+/* -------------------------------------------------------------------------- */
 typedef struct client
 {
     int socket;
-    char *nom;
+    char nom[TAILLE_PSEUDO];
     bool estConnecte;
 } client;
-
-int demarrerConversation(client *emetteur, client *recepteur, const int tailleMessage);
 
 typedef struct argsThread
 {
     client *client;
     client **clients;
 } argsThread;
-
-int creerSocketEcouteur(int port, int nbClientsEnAttente);
 
 /**
  * @brief Accepte une connexion client entrante sur la socket d'écoute.
@@ -63,6 +67,12 @@ int ajouterAuTableau(client **clients, client *clientAAjouter);
  */
 int supprimerDuTableau(client **clients, client *clientASupprimer);
 
-void *routage(void *arg);
-int envoyerMessageBroadcast(const client **listeClients, const client *clientCourant, MessageBroadcast messageBroadcast);
+
+/* -------------------------------------------------------------------------- */
+/*                    Réception et traitement des messages                    */
+/* -------------------------------------------------------------------------- */
+void *receptionMessages(void *arg);
+int routageMessageRecu(client **listeClients, client *clientCourant, void *message);
+int controlleurMessageBroadcast(const client **listeClients, const client *clientCourant, MessageBroadcast messageBroadcast);
+int controlleurAttributionPseudo(const client **listeClients, const client *clientCourant, AttributionPseudo attributionPseudo);
 int broadcast(const client **listeClients, const void *messageFormate);

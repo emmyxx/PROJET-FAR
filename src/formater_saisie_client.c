@@ -1,5 +1,5 @@
 #include "../include/common.h"
-#include "../include/protocole.h"
+#include "../include/formater_saisie_client.h"
 
 static MessageBroadcast *formaterEnBroadcast(char *saisieClient)
 {
@@ -21,7 +21,7 @@ static AttributionPseudo *formaterEnPseudo(char *saisieClient)
     AttributionPseudo *attributionPseudo = (AttributionPseudo *)malloc(sizeof(AttributionPseudo));
     attributionPseudo->typeMessage = PSEUDO;
     strcpy(attributionPseudo->pseudo, pseudo);
-    
+
     return attributionPseudo;
 }
 

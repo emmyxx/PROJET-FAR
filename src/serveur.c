@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
       // Génère le nom du client
       char *nomClient = NULL;
       genererNomClient(&nomClient);
-      nouveauClient->nom = nomClient;
+      strcpy(nouveauClient->nom, nomClient);
 
       // Attend qu'un client se connecte
       nouveauClient->socket = accepterClient(socketEcouteur);
@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
       argsThread *args = (argsThread *)malloc(sizeof(argsThread));
       args->client = nouveauClient;
       args->clients = clients;
-      pthread_create(&threadBroadcast, NULL, routage, args);
+      pthread_create(&threadBroadcast, NULL, receptionMessages, args);
     }
   }
 
@@ -87,11 +87,11 @@ int creerSocketEcouteur(int port, int nbClientsEnAttente)
   return socketEcouteur;
 }
 
-void *routage(void *arg)
+void *receptionMessages(void *arg)
 {
   argsThread *args = (argsThread *)arg;
-  client *clientCourant = args->client;
   client **listeClients = args->clients;
+  client *clientCourant = args->client;
   char message[TAILLE_MESSAGE_TCP];
   int reponse;
 
@@ -107,13 +107,7 @@ void *routage(void *arg)
       break;
     }
 
-    const TypeMessage typeMessage = *(TypeMessage *)message;
-
-    if (typeMessage == MESSAGE_BROADCAST)
-    {
-      MessageBroadcast messageBroadcast = *(MessageBroadcast *)message;
-      envoyerMessageBroadcast((const client **)listeClients, (const client *)clientCourant, messageBroadcast);
-    }
+    routageMessageRecu(listeClients, clientCourant, message);
   }
 
   printf("Fin de la connexion avec le client %s\n", args->client->nom);
@@ -122,8 +116,20 @@ void *routage(void *arg)
   pthread_exit(NULL);
 }
 
-// FIXME pourquoi utiliser un array ?
-int envoyerMessageBroadcast(const client **listeClients, const client *clientCourant, MessageBroadcast messageBroadcast)
+int routageMessageRecu(client **listeClients, client *clientCourant,void *message)
+{
+  const TypeMessage typeMessage = *(TypeMessage *)message;
+
+  if (typeMessage == MESSAGE_BROADCAST)
+  {
+    MessageBroadcast messageBroadcast = *(MessageBroadcast *)message;
+    return controlleurMessageBroadcast((const client **)listeClients, (const client *)clientCourant, messageBroadcast);
+  }
+
+  return -1;
+}
+
+int controlleurMessageBroadcast(const client **listeClients, const client *clientCourant, MessageBroadcast messageBroadcast)
 {
   strcpy(messageBroadcast.expediteur, clientCourant->nom);
   for (int i = 0; i < NB_CLIENTS_MAX; i++)
@@ -195,7 +201,6 @@ int supprimerDuTableau(client **clients, client *clientASupprimer)
   {
     if (clients[i] == clientASupprimer)
     {
-      free(clients[i]->nom);
       free(clients[i]);
       clients[i] = NULL;
       return 0;
