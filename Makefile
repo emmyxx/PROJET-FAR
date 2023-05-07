@@ -10,7 +10,10 @@ SERVER_TARGET = $(BUILD_DIR)/serveur
 CLIENT_OBJ_FILES = $(BUILD_DIR)/client.o $(BUILD_DIR)/common.o $(BUILD_DIR)/formater_saisie_client.o
 SERVER_OBJ_FILES = $(BUILD_DIR)/serveur.o $(BUILD_DIR)/common.o 
 
-all: $(CLIENT_TARGET) $(SERVER_TARGET)
+all: $(BUILD_DIR) $(CLIENT_TARGET) $(SERVER_TARGET)
+
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
 
 $(CLIENT_TARGET): $(CLIENT_OBJ_FILES)
 	$(CC) $(CFLAGS) -o $(CLIENT_TARGET) $(CLIENT_OBJ_FILES)
