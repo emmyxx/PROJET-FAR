@@ -1,14 +1,19 @@
 #include "../include/common.h"
 #include "../include/serveur.h"
 
+pthread_mutex_t clients_mutex;
+
 int main(int argc, char *argv[])
 {
   gestionnaireArguments(argc, argv);
   const int port = atoi(argv[1]);
   const int socketEcouteur = creerSocketEcouteur(port, NB_CLIENTS_EN_ATTENTE);
+
   client *clients[NB_CLIENTS_MAX];
   for (int i = 0; i < NB_CLIENTS_MAX; i++)
     clients[i] = NULL;
+
+  pthread_mutex_init(&clients_mutex, NULL);
 
   puts("Serveur démarré");
 
@@ -37,6 +42,7 @@ int main(int argc, char *argv[])
 
   close(socketEcouteur);
   printf("Fin du programme\n");
+  exit(EXIT_SUCCESS);
 }
 
 int accepterClient(const int socketEcouteur)
@@ -260,6 +266,7 @@ int broadcast(const client **listeClients, const client *clientCourant, const vo
 
 int avoirNombreClientsConnectes(client **clients)
 {
+  pthread_mutex_lock(&clients_mutex);
   int nbClientsConnectes = 0;
   for (int i = 0; i < NB_CLIENTS_MAX; i++)
   {
@@ -268,32 +275,39 @@ int avoirNombreClientsConnectes(client **clients)
       nbClientsConnectes++;
     }
   }
+  pthread_mutex_unlock(&clients_mutex);
   return nbClientsConnectes;
 }
 
 int ajouterAuTableau(client **clients, client *clientAAjouter)
 {
+  pthread_mutex_lock(&clients_mutex);
   for (int i = 0; i < NB_CLIENTS_MAX; i++)
   {
     if (clients[i] == NULL)
     {
       clients[i] = clientAAjouter;
+      pthread_mutex_unlock(&clients_mutex);
       return 0;
     }
   }
+  pthread_mutex_unlock(&clients_mutex);
   return -1;
 }
 
 int supprimerDuTableau(client **clients, client *clientASupprimer)
 {
+  pthread_mutex_lock(&clients_mutex);
   for (int i = 0; i < NB_CLIENTS_MAX; i++)
   {
     if (clients[i] == clientASupprimer)
     {
       free(clients[i]);
       clients[i] = NULL;
+      pthread_mutex_unlock(&clients_mutex);
       return 0;
     }
   }
+  pthread_mutex_unlock(&clients_mutex);
   return -1;
 }
