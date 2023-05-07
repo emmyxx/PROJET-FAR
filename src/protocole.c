@@ -1,13 +1,15 @@
 #include "../include/common.h"
+#include "../include/protocole.h"
 
-static char *formaterEnBroadcast(char *messageTCP, char *saisieClient)
+static MessageBroadcast *formaterEnBroadcast(char *saisieClient)
 {
-    strcat(messageTCP, "MESSAGE_BROADCAST ");
-    strcat(messageTCP, saisieClient);
-    return messageTCP;
+    MessageBroadcast *messageBroadcast = (MessageBroadcast *)malloc(sizeof(MessageBroadcast));
+    messageBroadcast->typeMessage = MESSAGE_BROADCAST;
+    strcpy(messageBroadcast->message, saisieClient);
+    return messageBroadcast;
 }
 
-static char *formaterEnPseudo(char *messageTCP, char *saisieClient)
+static AttributionPseudo *formaterEnPseudo(char *saisieClient)
 {
     const char *pseudo = strtok(saisieClient, " ");
     if (pseudo == NULL)
@@ -16,25 +18,24 @@ static char *formaterEnPseudo(char *messageTCP, char *saisieClient)
         return NULL;
     }
 
-    strcat(messageTCP, "PSEUDO ");
-    strcat(messageTCP, pseudo);
-
-    return messageTCP;
+    AttributionPseudo *attributionPseudo = (AttributionPseudo *)malloc(sizeof(AttributionPseudo));
+    attributionPseudo->typeMessage = PSEUDO;
+    strcpy(attributionPseudo->pseudo, pseudo);
+    
+    return attributionPseudo;
 }
 
-char *formaterSaisieClient(char *messageTCP, const char *saisie)
+void *formaterSaisieClient(char *saisie)
 {
-    // Remplit messageTCP de '\0' (au cas où il y aurait des caractères résiduels)
-    memset(messageTCP, '\0', TAILLE_MESSAGE_TCP);
+    // S'il n'y a pas de commande
+    if (saisie[0] != '/')
+        return formaterEnBroadcast(saisie);
 
-    char *copieSaisie = strdup(saisie);
-
-    const char *nomCommande = strtok(copieSaisie, " ");
+    const char *nomCommande = strtok(saisie, " ");
 
     if (nomCommande == NULL)
     {
         errno = EINVAL;
-        free(copieSaisie);
         return NULL;
     }
 
@@ -43,30 +44,15 @@ char *formaterSaisieClient(char *messageTCP, const char *saisie)
     if (strlen(nomCommande) >= TAILLE_SAISIE_CLIENT - 1)
     {
         errno = EINVAL;
-        free(copieSaisie);
         return NULL;
     }
-
-    // S'il n'y a pas de commande
-    if (copieSaisie[0] != '/')
-        messageTCP = formaterEnBroadcast(messageTCP, copieSaisie);
 
     // "/mp pseudo message" -> "pseudo message"
-    char *saisieSansCommande = copieSaisie + strlen(nomCommande) + 1;
+    char *saisieSansCommande = saisie + strlen(nomCommande) + 1;
 
     if (strcmp(nomCommande, "/pseudo") == 0)
-        messageTCP = formaterEnPseudo(messageTCP, saisieSansCommande);
+        return formaterEnPseudo(saisieSansCommande);
 
-    // Si la saisie du client ne respecte pas la syntaxe d'une commande
-    if (messageTCP == NULL || messageTCP[0] == '\0')
-    {
-        errno = EINVAL;
-        free(copieSaisie);
-        return NULL;
-    }
-
-    // DEBUG
-    printf("messageTCP : %s\n", messageTCP);
-
-    return messageTCP;
+    errno = EINVAL;
+    return NULL;
 }
