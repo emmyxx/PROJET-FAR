@@ -7,7 +7,19 @@ int main(int argc, char *argv[])
 
   const char *ipServeur = argv[1];
   const int portServeur = atoi(argv[2]);
+  char *pseudo = argv[3];
   int socketServeur = creerConnexionServeur(ipServeur, portServeur);
+
+  if (strlen(pseudo) > TAILLE_PSEUDO)
+  {
+    afficherMessageAlerte("Erreur : le pseudo est trop long.\n", ERREUR);
+    exit(EXIT_FAILURE);
+  }
+  AttributionPseudo attributionPseudo;
+  attributionPseudo.typeMessage = PSEUDO;
+  strcpy(attributionPseudo.pseudo, pseudo);
+  if (write(socketServeur, &attributionPseudo, TAILLE_MESSAGE_TCP) == -1)
+    gestionnaireErreur("Erreur lors de l'envoi du pseudo au serveur");
 
   pthread_t threadRecevoir, threadEnvoyer;
   if (pthread_create(&threadEnvoyer, NULL, envoiMessages, &socketServeur) != 0)
@@ -30,7 +42,7 @@ void gestionnaireArguments(int argc, char *argv[])
     fprintf(stderr,
             "Erreur : %d arguments attendus, mais %d ont été fournis.\n",
             NB_ARGS_ATTENDUS, argc);
-    fprintf(stderr, "Utilisation : %s <adresse_ip> <port>\n", argv[0]);
+    fprintf(stderr, "Utilisation : %s <adresse_ip> <port> <pseudo>\n", argv[0]);
     exit(EXIT_FAILURE);
   }
 }
@@ -118,12 +130,43 @@ int routageMessageRecu(void *messageRecu)
     return 0;
   }
 
+  if (typeMessage == MESSAGE_ALERTE)
+  {
+    MessageAlerte messageAlerte = *(MessageAlerte *)messageRecu;
+    afficherMessageAlerte(messageAlerte.message, messageAlerte.typeAlerte);
+    return 0;
+  }
+
   return -1;
 }
 
-int recevoirMessageBroadcast(const MessageBroadcast messageBroadcast) {
+int recevoirMessageBroadcast(const MessageBroadcast messageBroadcast)
+{
   printf("%s : %s\n", messageBroadcast.expediteur, messageBroadcast.message);
   return 0;
+}
+
+int afficherMessageAlerte(char *message, TypeAlerte typeAlerte)
+{
+  if (typeAlerte == INFORMATION)
+  {
+    printf("\033[3;37m%s\033[0m\n", message); // texte en bleu/gris clair et en italique
+    return 0;
+  }
+  else if (typeAlerte == AVERTISSEMENT)
+  {
+    printf("🔔  \033[33m%s\033[0m\n", message); // texte en orange
+    return 0;
+  }
+  else if (typeAlerte == ERREUR)
+  {
+    printf("⚠️  \033[1;31m%s\033[0m\n", message); // texte en gras et en rouge
+    return 0;
+  }
+  else
+  {
+    return -1;
+  }
 }
 
 int entrerMessage(char *message, const int tailleMessage)

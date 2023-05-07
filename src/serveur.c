@@ -20,25 +20,23 @@ int main(int argc, char *argv[])
       client *nouveauClient = (client *)malloc(sizeof(client));
 
       // Génère le nom du client
-      char *nomClient = NULL;
-      genererNomClient(&nomClient);
-      strcpy(nouveauClient->nom, nomClient);
+      // char *nomClient = NULL;
+      // genererNomClient(&nomClient);
+      // strcpy(nouveauClient->nom, nomClient);
 
       // Attend qu'un client se connecte
       nouveauClient->socket = accepterClient(socketEcouteur);
       if (nouveauClient->socket < 0)
         gestionnaireErreur("Erreur d'acceptation du client");
       nouveauClient->estConnecte = true;
-      printf("Client %s connecté\n", nouveauClient->nom);
 
       ajouterAuTableau(clients, nouveauClient);
 
-      // Démarre le thread de broadcast, qui va recevoir le message du client et l'envoyer à tous les autres
-      pthread_t threadBroadcast;
+      pthread_t threadReception;
       argsThread *args = (argsThread *)malloc(sizeof(argsThread));
       args->client = nouveauClient;
       args->clients = clients;
-      pthread_create(&threadBroadcast, NULL, receptionMessages, args);
+      pthread_create(&threadReception, NULL, receptionMessages, args);
     }
   }
 
@@ -95,6 +93,15 @@ void *receptionMessages(void *arg)
   char message[TAILLE_MESSAGE_TCP];
   int reponse;
 
+  // Attribution du pseudonyme
+  reponse = recv(clientCourant->socket, message, TAILLE_MESSAGE_TCP, 0);
+  if (reponse < 0)
+    envoyerMessageAlerte(clientCourant, "Erreur serveur lors de la réception du pseudonyme.", ERREUR);
+  else if (reponse == 0)
+    clientCourant->estConnecte = false;
+  else
+    controlleurConnexion((const client **)listeClients, clientCourant, message);
+
   while (clientCourant->estConnecte)
   {
     reponse = recv(clientCourant->socket, message, TAILLE_MESSAGE_TCP, 0);
@@ -116,7 +123,7 @@ void *receptionMessages(void *arg)
   pthread_exit(NULL);
 }
 
-int routageMessageRecu(client **listeClients, client *clientCourant,void *message)
+int routageMessageRecu(client **listeClients, client *clientCourant, void *message)
 {
   const TypeMessage typeMessage = *(TypeMessage *)message;
 
@@ -126,32 +133,94 @@ int routageMessageRecu(client **listeClients, client *clientCourant,void *messag
     return controlleurMessageBroadcast((const client **)listeClients, (const client *)clientCourant, messageBroadcast);
   }
 
+  if (typeMessage == PSEUDO)
+  {
+    AttributionPseudo pseudo = *(AttributionPseudo *)message;
+    return controlleurAttributionPseudo((const client **)listeClients, clientCourant, pseudo);
+  }
+
   return -1;
+}
+
+int controlleurConnexion(const client **listeClients, client *clientCourant, void *message)
+{
+  const TypeMessage typeMessage = *(TypeMessage *)message;
+  if (typeMessage != PSEUDO)
+  {
+    envoyerMessageAlerte(clientCourant, "Le message TCP d'attritution du pseudonyme est mal formaté.", ERREUR);
+    clientCourant->estConnecte = false;
+    return -1;
+  }
+
+  AttributionPseudo pseudo = *(AttributionPseudo *)message;
+
+  if (!estPseudoValide(listeClients, pseudo.pseudo))
+  {
+    envoyerMessageAlerte(clientCourant, "Ce pseudonyme est déjà utilisé.", ERREUR);
+    clientCourant->estConnecte = false;
+    return -1;
+  }
+
+  // Créer un string qui contient le message de bienvenue
+  char messageBienvenue[TAILLE_MESSAGE_TCP];
+  sprintf(messageBienvenue, "Bienvenue %s !", pseudo.pseudo);
+  envoyerMessageAlerte(clientCourant, messageBienvenue, INFORMATION);
+  // TODO broadcast de l'arrivée du client
+  strcpy(clientCourant->nom, pseudo.pseudo);
+  return 0;
 }
 
 int controlleurMessageBroadcast(const client **listeClients, const client *clientCourant, MessageBroadcast messageBroadcast)
 {
   strcpy(messageBroadcast.expediteur, clientCourant->nom);
-  for (int i = 0; i < NB_CLIENTS_MAX; i++)
-  {
-    if (listeClients[i] != NULL && listeClients[i] != clientCourant)
-    {
-      if (send(listeClients[i]->socket, &messageBroadcast, TAILLE_MESSAGE_TCP, 0) < 0)
-        return -1;
-    }
-  }
-
+  broadcast(listeClients, clientCourant, &messageBroadcast);
   printf("%s broadcast : \"%s\"\n", clientCourant->nom, messageBroadcast.message);
   return 0;
 }
 
-int broadcast(const client **listeClients, const void *messageFormate)
+int controlleurAttributionPseudo(const client **listeClients, client *clientCourant, AttributionPseudo pseudo)
+{
+  if (!estPseudoValide(listeClients, pseudo.pseudo))
+  {
+    envoyerMessageAlerte(clientCourant, "Ce pseudonyme est déjà utilisé.", AVERTISSEMENT);
+    return -1;
+  }
+
+  strcpy(clientCourant->nom, pseudo.pseudo);
+  return 0;
+}
+
+bool estPseudoValide(const client **listeClients, const char *pseudo)
 {
   for (int i = 0; i < NB_CLIENTS_MAX; i++)
   {
-    if (listeClients[i] != NULL)
+    if (listeClients[i] != NULL && strcmp(listeClients[i]->nom, pseudo) == 0)
     {
-      if (send(listeClients[i]->socket, messageFormate, TAILLE_MESSAGE_TCP, 0) < 0)
+      return false;
+    }
+  }
+
+  return true;
+}
+
+int envoyerMessageAlerte(const client *clientCourant, char *message, TypeAlerte typeAlerte)
+{
+  MessageAlerte messageAlerte;
+  messageAlerte.typeMessage = MESSAGE_ALERTE;
+  messageAlerte.typeAlerte = typeAlerte;
+  strcpy(messageAlerte.message, message);
+  if (send(clientCourant->socket, &messageAlerte, TAILLE_MESSAGE_TCP, 0) < 0)
+    return -1;
+  return 0;
+}
+
+int broadcast(const client **listeClients, const client *clientCourant, const void *message)
+{
+  for (int i = 0; i < NB_CLIENTS_MAX; i++)
+  {
+    if (listeClients[i] != NULL && listeClients[i] != clientCourant)
+    {
+      if (send(listeClients[i]->socket, message, TAILLE_MESSAGE_TCP, 0) < 0)
         return -1;
     }
   }

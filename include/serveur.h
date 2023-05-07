@@ -73,6 +73,9 @@ int supprimerDuTableau(client **clients, client *clientASupprimer);
 /* -------------------------------------------------------------------------- */
 void *receptionMessages(void *arg);
 int routageMessageRecu(client **listeClients, client *clientCourant, void *message);
+int controlleurConnexion(const client **listeClients, client *clientCourant, void *message);
 int controlleurMessageBroadcast(const client **listeClients, const client *clientCourant, MessageBroadcast messageBroadcast);
-int controlleurAttributionPseudo(const client **listeClients, const client *clientCourant, AttributionPseudo attributionPseudo);
-int broadcast(const client **listeClients, const void *messageFormate);
+int controlleurAttributionPseudo(const client **listeClients, client *clientCourant, AttributionPseudo pseudo);
+int envoyerMessageAlerte(const client *clientCourant, char *message, TypeAlerte niveauAlerte);
+bool estPseudoValide(const client **listeClients, const char *pseudo);
+int broadcast(const client **listeClients, const client *clientCourant, const void *messageFormate);

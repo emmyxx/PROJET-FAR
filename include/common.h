@@ -24,9 +24,17 @@
 typedef enum
 {
     MESSAGE_BROADCAST,
-    MESSAGE_PRIVE,
     PSEUDO,
+    MESSAGE_ALERTE,
+    MESSAGE_SERVEUR,
 } TypeMessage;
+
+typedef enum
+{
+    INFORMATION,
+    AVERTISSEMENT,
+    ERREUR,
+} TypeAlerte;
 
 typedef struct
 {
@@ -40,6 +48,13 @@ typedef struct
     TypeMessage typeMessage;
     char pseudo[TAILLE_PSEUDO];
 } AttributionPseudo;
+
+typedef struct
+{
+    TypeMessage typeMessage;
+    TypeAlerte typeAlerte;
+    char message[TAILLE_SAISIE_CLIENT];
+} MessageAlerte;
 
 void gestionnaireErreur(const char *message);
 void gestionnaireArguments(int argc, char *argv[]);

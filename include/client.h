@@ -1,6 +1,6 @@
 #include "../include/formater_saisie_client.h"
 
-#define NB_ARGS_ATTENDUS 3
+#define NB_ARGS_ATTENDUS 4
 
 
 /* -------------------------------------------------------------------------- */
@@ -15,6 +15,7 @@ int creerConnexionServeur(const char *ipServeur, const int portServeur);
 void *receptionMessages(void *arg);
 int routageMessageRecu(void *messageRecu);
 int recevoirMessageBroadcast(const MessageBroadcast messageBroadcast);
+int afficherMessageAlerte(char *message, TypeAlerte typeAlerte);
 
 
 /* -------------------------------------------------------------------------- */
