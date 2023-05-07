@@ -1,3 +1,5 @@
+#include "../include/protocole.h"
+
 #define NB_ARGS_ATTENDUS 3
 
 int creerConnexionServeur(const char *ipServeur, const int portServeur);
@@ -15,3 +17,5 @@ void *recevoirEtAfficherMessages(void *arg);
 int entrerMessage(char *message, const int tailleMessage);
 void nettoyerBufferEntree();
 
+int routageMessageRecu(void *messageRecu);
+int recevoirMessageBroadcast(const MessageBroadcast messageBroadcast);

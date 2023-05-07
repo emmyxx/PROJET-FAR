@@ -1,3 +1,5 @@
+#include "../include/protocole.h"
+
 #define NB_ARGS_ATTENDUS 2
 #define NB_CLIENTS_EN_ATTENTE 8
 #define NB_CLIENTS_MAX 3
@@ -6,6 +8,7 @@ typedef struct client
 {
     int socket;
     char *nom;
+    bool estConnecte;
 } client;
 
 int demarrerConversation(client *emetteur, client *recepteur, const int tailleMessage);
@@ -17,8 +20,6 @@ typedef struct argsThread
 } argsThread;
 
 int creerSocketEcouteur(int port, int nbClientsEnAttente);
-
-void *broadcast(void *arg);
 
 /**
  * @brief Accepte une connexion client entrante sur la socket d'écoute.
@@ -61,3 +62,7 @@ int ajouterAuTableau(client **clients, client *clientAAjouter);
  * @return int Retourne 0 si le client est supprimé avec succès, -1 si le client n'est pas présent dans le tableau.
  */
 int supprimerDuTableau(client **clients, client *clientASupprimer);
+
+void *routage(void *arg);
+int envoyerMessageBroadcast(const client **listeClients, const client *clientCourant, MessageBroadcast messageBroadcast);
+int broadcast(const client **listeClients, const void *messageFormate);

@@ -1,6 +1,5 @@
 #include "../include/common.h"
 #include "../include/client.h"
-#include "../include/protocole.h"
 
 int main(int argc, char *argv[])
 {
@@ -61,14 +60,22 @@ void *entrerEtEnvoyerMessages(void *arg)
 {
   int socketServeur = *(int *)arg;
   char saisieClient[TAILLE_SAISIE_CLIENT];
-  // char messageTCP[TAILLE_MESSAGE_TCP];
 
   while (strcmp(saisieClient, "fin") != 0)
   {
-    while (entrerMessage(saisieClient, TAILLE_SAISIE_CLIENT) == -1)
-      ;
-    if (send(socketServeur, saisieClient, TAILLE_MESSAGE_TCP, 0) < 0)
+    char *messageFormate = NULL;
+
+    while (messageFormate == NULL)
+    {
+      while (entrerMessage(saisieClient, TAILLE_SAISIE_CLIENT) != 0)
+        ;
+      messageFormate = formaterSaisieClient(saisieClient);
+    }
+
+    if (send(socketServeur, messageFormate, TAILLE_MESSAGE_TCP, 0) < 0)
       gestionnaireErreur("Erreur lors de l'envoi du message");
+
+    free(messageFormate);
   }
 
   puts("Vous avez quitté la conversation");
@@ -78,12 +85,12 @@ void *entrerEtEnvoyerMessages(void *arg)
 void *recevoirEtAfficherMessages(void *arg)
 {
   int socketServeur = *(int *)arg;
-  char message[TAILLE_MESSAGE_TCP];
+  char messageRecu[TAILLE_MESSAGE_TCP];
   int reponse = 1;
 
   while (true)
   {
-    reponse = recv(socketServeur, message, TAILLE_MESSAGE_TCP, 0);
+    reponse = recv(socketServeur, messageRecu, TAILLE_MESSAGE_TCP, 0);
 
     if (reponse < 0)
       gestionnaireErreur("Erreur lors de la reception du message");
@@ -94,10 +101,30 @@ void *recevoirEtAfficherMessages(void *arg)
       exit(EXIT_FAILURE);
     }
 
-    printf("%s\n", message);
+    routageMessageRecu(messageRecu);
   }
 
   exit(EXIT_FAILURE);
+}
+
+int routageMessageRecu(void *messageRecu)
+{
+  const TypeMessage typeMessage = *(TypeMessage *)messageRecu;
+
+  if (typeMessage == MESSAGE_BROADCAST)
+  {
+    const MessageBroadcast messageBroadcast = *(MessageBroadcast *)messageRecu;
+    recevoirMessageBroadcast(messageBroadcast);
+    return 0;
+  }
+
+  return -1;
+}
+
+int recevoirMessageBroadcast(const MessageBroadcast messageBroadcast) {
+  printf("%s : %s\n", messageBroadcast.expediteur, messageBroadcast.message);
+
+  return 0;
 }
 
 int entrerMessage(char *message, const int tailleMessage)

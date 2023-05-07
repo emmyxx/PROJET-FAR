@@ -1,5 +1,6 @@
 #define TAILLE_TYPE_MESSAGE 16
 
+// TODO indiquer que le pointeur est défini avec malloc
 /**
  * @brief Formate la saisie d'un client de manière à ce qu'elle respecte la syntaxe du protocole.
  * @param messageTCP Le message TCP à envoyer au serveur.
@@ -18,7 +19,7 @@ typedef enum {
 typedef struct
 {
     TypeMessage typeMessage;
-    char expediteur[TAILLE_PSEUDO ];
+    char expediteur[TAILLE_PSEUDO];
     char message[TAILLE_SAISIE_CLIENT];
 } MessageBroadcast;
 

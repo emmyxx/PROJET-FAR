@@ -10,6 +10,8 @@ int main(int argc, char *argv[])
   for (int i = 0; i < NB_CLIENTS_MAX; i++)
     clients[i] = NULL;
 
+  puts("Serveur démarré");
+
   while (true)
   {
     // Accepte des clients tant que l'on n'a pas atteint la limite
@@ -26,6 +28,7 @@ int main(int argc, char *argv[])
       nouveauClient->socket = accepterClient(socketEcouteur);
       if (nouveauClient->socket < 0)
         gestionnaireErreur("Erreur d'acceptation du client");
+      nouveauClient->estConnecte = true;
       printf("Client %s connecté\n", nouveauClient->nom);
 
       ajouterAuTableau(clients, nouveauClient);
@@ -35,7 +38,7 @@ int main(int argc, char *argv[])
       argsThread *args = (argsThread *)malloc(sizeof(argsThread));
       args->client = nouveauClient;
       args->clients = clients;
-      pthread_create(&threadBroadcast, NULL, broadcast, args);
+      pthread_create(&threadBroadcast, NULL, routage, args);
     }
   }
 
@@ -84,37 +87,32 @@ int creerSocketEcouteur(int port, int nbClientsEnAttente)
   return socketEcouteur;
 }
 
-void *broadcast(void *arg)
+void *routage(void *arg)
 {
   argsThread *args = (argsThread *)arg;
+  client *clientCourant = args->client;
+  client **listeClients = args->clients;
   char message[TAILLE_MESSAGE_TCP];
   int reponse;
-  while (true)
-  {
-    reponse = recv(args->client->socket, message, TAILLE_MESSAGE_TCP, 0);
 
+  while (clientCourant->estConnecte)
+  {
+    reponse = recv(clientCourant->socket, message, TAILLE_MESSAGE_TCP, 0);
     if (reponse < 0)
       gestionnaireErreur("Erreur de réception du message"); // FIXME ne pas faire crasher le programme
 
-    if (reponse == 0 || strcmp(message, "fin") == 0)
+    if (reponse == 0)
     {
+      clientCourant->estConnecte = false;
       break;
     }
 
-    printf("%s : %s\n", args->client->nom, message);
+    const TypeMessage typeMessage = *(TypeMessage *)message;
 
-    // Coupe la taille de "message" de façon à ce qu'elle ne dépasse pas 255 caractères
-    // quand on la concatène avec le nom du client
-    char messageAvecNom[TAILLE_MESSAGE_TCP];
-    snprintf(messageAvecNom, TAILLE_MESSAGE_TCP - 1, "%s : %.*s", args->client->nom, TAILLE_MESSAGE_TCP - (int)strlen(args->client->nom), message);
-
-    for (int i = 0; i < NB_CLIENTS_MAX; i++)
+    if (typeMessage == MESSAGE_BROADCAST)
     {
-      if (args->clients[i] != args->client && args->clients[i] != NULL)
-      {
-        if (send(args->clients[i]->socket, messageAvecNom, TAILLE_MESSAGE_TCP, 0) < 0)
-          gestionnaireErreur("Erreur d'envoi du message"); // FIXME ne pas faire crasher le programme
-      }
+      MessageBroadcast messageBroadcast = *(MessageBroadcast *)message;
+      envoyerMessageBroadcast((const client **)listeClients, (const client *)clientCourant, messageBroadcast);
     }
   }
 
@@ -122,6 +120,37 @@ void *broadcast(void *arg)
   close(args->client->socket);
   supprimerDuTableau(args->clients, args->client);
   pthread_exit(NULL);
+}
+
+// FIXME pourquoi utiliser un array ?
+int envoyerMessageBroadcast(const client **listeClients, const client *clientCourant, MessageBroadcast messageBroadcast)
+{
+  strcpy(messageBroadcast.expediteur, clientCourant->nom);
+  for (int i = 0; i < NB_CLIENTS_MAX; i++)
+  {
+    if (listeClients[i] != NULL && listeClients[i] != clientCourant)
+    {
+      if (send(listeClients[i]->socket, &messageBroadcast, TAILLE_MESSAGE_TCP, 0) < 0)
+        return -1;
+    }
+  }
+
+  printf("%s broadcast : \"%s\"\n", clientCourant->nom, messageBroadcast.message);
+  return 0;
+}
+
+int broadcast(const client **listeClients, const void *messageFormate)
+{
+  for (int i = 0; i < NB_CLIENTS_MAX; i++)
+  {
+    if (listeClients[i] != NULL)
+    {
+      if (send(listeClients[i]->socket, messageFormate, TAILLE_MESSAGE_TCP, 0) < 0)
+        return -1;
+    }
+  }
+
+  return 0;
 }
 
 int genererNomClient(char **nomClient)
