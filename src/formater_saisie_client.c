@@ -26,7 +26,7 @@ static AttributionPseudo *formaterEnPseudo(char *saisieClient)
 }
 
 static MessagePrive *formaterEnMessagePrive(char *saisieClient)
-{    
+{
     const char *pseudoDestinataire = strtok(saisieClient, " ");
     if (pseudoDestinataire == NULL)
     {
@@ -46,6 +46,32 @@ static MessagePrive *formaterEnMessagePrive(char *saisieClient)
     strcpy(messagePrive->message, message);
 
     return messagePrive;
+}
+
+int afficherManuel()
+{
+    FILE *fichier;
+    char ch;
+
+    // Ouvrir le fichier en mode lecture (read)
+    fichier = fopen("manuel.txt", "r");
+
+    // Vérifier si l'ouverture a réussi
+    if (fichier == NULL)
+    {
+        printf("Erreur lors de l'ouverture du fichier.\n");
+        return -1;
+    }
+
+    // Lire et afficher le contenu du fichier caractère par caractère
+    while ((ch = fgetc(fichier)) != EOF)
+    {
+        putchar(ch);
+    }
+
+    // Fermer le fichier
+    fclose(fichier);
+    return 0;
 }
 
 void *formaterSaisieClient(char *saisie)
@@ -84,6 +110,12 @@ void *formaterSaisieClient(char *saisie)
 
     if (strcmp(nomCommande, "/mp") == 0)
         return formaterEnMessagePrive(saisieSansCommande);
+
+    if (strcmp(nomCommande, "/man") == 0)
+    {
+        afficherManuel();
+        return NULL;
+    }
 
     errno = EINVAL;
     return NULL;

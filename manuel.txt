@@ -1,0 +1,5 @@
+Commandes disponibles :
+  /pseudo <pseudo> : changer de pseudo
+  /mp <pseudo> <message> : envoyer un message privé
+  /fin : quitter la messagerie
+  /man : afficher l'aide

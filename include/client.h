@@ -9,6 +9,7 @@
 int creerConnexionServeur(const char *ipServeur, const int portServeur);
 void gestionnaireSignal(int signum);
 void arreterCommunication();
+void afficherManuel();
 
 
 /* -------------------------------------------------------------------------- */
