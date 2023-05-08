@@ -1,4 +1,4 @@
-#include <constantes.h>
+#include "../include/constantes.h"
 #include "../include/common.h"
 #include "../include/serveur.h"
 
@@ -200,6 +200,7 @@ int controlleurAttributionPseudo(const client **listeClients, client *clientCour
 
 int controlleurMessagePrive(const client **listeClients, const client *clientCourant, MessagePrive messagePrive)
 {
+  printf("Destinataire : %s\n", messagePrive.destinataire);
   if (strcmp(messagePrive.destinataire, clientCourant->nom) == 0)
   {
     envoyerMessageAlerte(clientCourant, "Vous ne pouvez pas vous envoyer un message privé.", AVERTISSEMENT);

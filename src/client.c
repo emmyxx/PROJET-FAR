@@ -1,4 +1,4 @@
-#include <constantes.h>
+#include "../include/constantes.h"
 #include "../include/common.h"
 #include "../include/client.h"
 
@@ -26,10 +26,10 @@ int main(int argc, char *argv[])
     gestionnaireErreur("Erreur lors de l'envoi du pseudo au serveur");
 
   pthread_t threadRecevoir, threadEnvoyer;
-  if (pthread_create(&threadEnvoyer, NULL, envoiMessages, &socketServeur) != 0)
+  if (pthread_create(&threadEnvoyer, NULL, threadEnvoiMessage, &socketServeur) != 0)
     gestionnaireErreur("Erreur lors de la création du thread d'envoi");
 
-  if (pthread_create(&threadRecevoir, NULL, receptionMessages, &socketServeur) != 0)
+  if (pthread_create(&threadRecevoir, NULL, threadReceptionMessages, &socketServeur) != 0)
     gestionnaireErreur("Erreur lors de la création du thread de réception");
 
   pthread_join(threadEnvoyer, NULL);
@@ -72,32 +72,23 @@ int creerConnexionServeur(const char *ipServeur, const int portServeur)
   return socketServeur;
 }
 
-void *envoiMessages(void *arg)
+void *threadEnvoiMessage(void *arg)
 {
-  int socketServeur = *(int *)arg;
-  char saisieClient[TAILLE_SAISIE_CLIENT];
+  const int socketServeur = *(int *)arg;
+  char saisie[TAILLE_SAISIE_CLIENT];
 
   while (true)
   {
-    char *messageFormate = NULL;
-
-    while (messageFormate == NULL)
-    {
-      while (entrerMessage(saisieClient, TAILLE_SAISIE_CLIENT) != 0)
-        ;
-      messageFormate = formaterSaisieClient(saisieClient);
-    }
-
-    if (send(socketServeur, messageFormate, TAILLE_MESSAGE_TCP, 0) < 0)
-      gestionnaireErreur("Erreur lors de l'envoi du message");
-
-    free(messageFormate);
+    while (entrerMessage(saisie, TAILLE_SAISIE_CLIENT) >= 0 &&
+           routageEnvoiMessage((const char *)saisie, socketServeur) >= 0)
+      ;
   }
 
+  // TODO Fermer le thread
   exit(EXIT_FAILURE);
 }
 
-void *receptionMessages(void *arg)
+void *threadReceptionMessages(void *arg)
 {
   int socketServeur = *(int *)arg;
   char messageRecu[TAILLE_MESSAGE_TCP];
@@ -227,4 +218,79 @@ void arreterCommunication()
 {
   printf("\nDeconnexion de la messagerie.\n");
   exit(EXIT_SUCCESS);
+}
+
+int afficherManuel()
+{
+  FILE *fichier;
+  char ch;
+
+  // Ouvrir le fichier en mode lecture (read)
+  fichier = fopen("manuel.txt", "r");
+
+  // Vérifier si l'ouverture a réussi
+  if (fichier == NULL)
+  {
+    printf("Erreur lors de l'ouverture du fichier.\n");
+    return -1;
+  }
+
+  // Lire et afficher le contenu du fichier caractère par caractère
+  while ((ch = fgetc(fichier)) != EOF)
+  {
+    putchar(ch);
+  }
+
+  // Fermer le fichier
+  fclose(fichier);
+  return 0;
+}
+
+int routageEnvoiMessage(const char *saisie, const int socketServeur)
+{
+  // Fait une copie de saisie pour ne pas modifier l'originale
+  char copieSaisie[TAILLE_SAISIE_CLIENT];
+  strcpy(copieSaisie, saisie);
+
+  // Exemple : "/mp pseudo message" -> "/mp"
+  const char *nomCommande = strtok(copieSaisie, " ");
+
+  // Vérifie que le nom de la commande n'est pas trop long
+  if (strlen(nomCommande) >= TAILLE_SAISIE_CLIENT - 1)
+  {
+    printf("⚠️  \033[31mLa commande est trop longue\033[0m\n");
+    return -1;
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*             Commandes qui n'envoient pas de message au serveur             */
+  /* -------------------------------------------------------------------------- */
+  if (strcmp(nomCommande, "/fin") == 0)
+  {
+    printf("Deconnexion de la messagerie.\n");
+    exit(EXIT_SUCCESS); // TODO ne pas faire un exit
+  }
+
+  else if (strcmp(nomCommande, "/man") == 0)
+  {
+    afficherManuel();
+    return 0;
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*                Commandes qui envoient un message au serveur                */
+  /* -------------------------------------------------------------------------- */
+  char *messageFormate = formater(saisie);
+  if (messageFormate == NULL)
+    return -1;
+
+  if (send(socketServeur, messageFormate, TAILLE_MESSAGE_TCP, 0) < 0)
+  {
+    printf("⚠️  \033[31mErreur lors de l'envoi du message: %s\033[0m\n", strerror(errno));
+    free(messageFormate);
+    return -2;
+  }
+
+  free(messageFormate);
+  return 0;
 }

@@ -1,4 +1,4 @@
-#include "../include/formater_saisie_client.h"
+#include "../include/formateur.h"
 
 #define NB_ARGS_ATTENDUS 4
 
@@ -9,13 +9,13 @@
 int creerConnexionServeur(const char *ipServeur, const int portServeur);
 void gestionnaireSignal(int signum);
 void arreterCommunication();
-void afficherManuel();
+int afficherManuel();
 
 
 /* -------------------------------------------------------------------------- */
 /*                    Réception et traitement des messages                    */
 /* -------------------------------------------------------------------------- */
-void *receptionMessages(void *arg);
+void *threadReceptionMessages(void *arg);
 int routageMessageRecu(void *messageRecu);
 int recevoirMessageBroadcast(const MessageBroadcast messageBroadcast);
 int afficherMessageAlerte(char *message, TypeAlerte typeAlerte);
@@ -25,7 +25,8 @@ int recevoirMessagePrive(const MessagePrive messagePrive);
 /* -------------------------------------------------------------------------- */
 /*                  Saisie, formattage et envoi des messages                  */
 /* -------------------------------------------------------------------------- */
-void *envoiMessages(void *arg);
+void *threadEnvoiMessage(void *arg);
+
 /**
  * @brief Lit une chaîne de caractères à partir de l'entrée standard.
  * @param message La chaîne de caractères lue depuis l'entrée standard.
@@ -34,4 +35,6 @@ void *envoiMessages(void *arg);
  * n'est entré ou si l'utilisateur a entré plus de tailleMessage - 1 caractères.
  */
 int entrerMessage(char *message, const int tailleMessage);
+
+int routageEnvoiMessage(const char *saisie, const int socketServeur);
 void nettoyerBufferEntree();
