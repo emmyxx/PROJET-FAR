@@ -1,5 +1,3 @@
-#include "../include/formateur.h"
-
 #define NB_ARGS_ATTENDUS 4
 
 

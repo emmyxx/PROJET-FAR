@@ -1,6 +1,6 @@
 #include "../include/constantes.h"
 #include "../include/common.h"
-#include "../include/formateur.h"
+#include "../include/client/formateur.h"
 
 static MessageBroadcast *formaterEnBroadcast(const char *saisieClient);
 static AttributionPseudo *formaterEnAttributionPseudo(char *saisieClient);

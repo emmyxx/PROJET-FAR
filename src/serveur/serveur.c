@@ -1,6 +1,6 @@
 #include "../include/constantes.h"
 #include "../include/common.h"
-#include "../include/serveur.h"
+#include "../include/serveur/serveur.h"
 
 pthread_mutex_t clients_mutex;
 

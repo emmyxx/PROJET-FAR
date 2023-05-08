@@ -1,6 +1,7 @@
 #include "../include/constantes.h"
 #include "../include/common.h"
-#include "../include/client.h"
+#include "../include/client/client.h"
+#include "../include/client/formateur.h"
 
 int main(int argc, char *argv[])
 {

@@ -12,7 +12,7 @@
 #include <errno.h>
 #include <signal.h>
 
-#include "../include/constantes.h"
+#include "constantes.h"
 
 typedef enum
 {

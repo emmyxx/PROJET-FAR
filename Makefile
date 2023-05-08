@@ -14,14 +14,23 @@ all: $(BUILD_DIR) $(CLIENT_TARGET) $(SERVER_TARGET)
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
-
+	
 $(CLIENT_TARGET): $(CLIENT_OBJ_FILES)
 	$(CC) $(CFLAGS) -o $(CLIENT_TARGET) $(CLIENT_OBJ_FILES)
 
 $(SERVER_TARGET): $(SERVER_OBJ_FILES)
 	$(CC) $(CFLAGS) -o $(SERVER_TARGET) $(SERVER_OBJ_FILES)
 
-$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
+$(BUILD_DIR)/client.o: $(SRC_DIR)/client/client.c
+	$(CC) $(CFLAGS) -I$(INCLUDE_DIR) -c $< -o $@
+
+$(BUILD_DIR)/formateur.o: $(SRC_DIR)/client/formateur.c
+	$(CC) $(CFLAGS) -I$(INCLUDE_DIR) -c $< -o $@
+
+$(BUILD_DIR)/serveur.o: $(SRC_DIR)/serveur/serveur.c
+	$(CC) $(CFLAGS) -I$(INCLUDE_DIR) -c $< -o $@
+
+$(BUILD_DIR)/common.o: $(SRC_DIR)/common.c
 	$(CC) $(CFLAGS) -I$(INCLUDE_DIR) -c $< -o $@
 
 .PHONY: clean
