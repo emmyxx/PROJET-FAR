@@ -1,4 +1,5 @@
 #include "../include/constantes.h"
+#include "../include/typesMessage.h"
 #include "../include/common.h"
 #include "../include/client/formateur.h"
 

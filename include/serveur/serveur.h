@@ -5,6 +5,7 @@
 #define NB_CLIENTS_EN_ATTENTE 8
 #define NB_CLIENTS_MAX 3
 
+#include "../typesMessage.h"
 #include "gestionnaireClients.h"
 
 /* -------------------------------------------------------------------------- */

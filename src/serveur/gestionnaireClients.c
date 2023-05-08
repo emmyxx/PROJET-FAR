@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "../include/constantes.h"
+#include "../include/typesMessage.h"
 #include "../include/serveur/gestionnaireClients.h"
 #include "../include/serveur/serveur.h"
 
