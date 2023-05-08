@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
   while (true)
   {
     // Accepte des clients tant que l'on n'a pas atteint la limite
-    if (avoirNombreClientsConnectes(clients) < NB_CLIENTS_MAX)
+    if (avoirNombreClientsConnectes((const client **)clients) < NB_CLIENTS_MAX)
     {
       client *nouveauClient = (client *)malloc(sizeof(client));
 
@@ -127,7 +127,7 @@ void *receptionMessages(void *arg)
 
   printf("%s s'est déconnecté(e).\n", args->client->nom);
   close(args->client->socket);
-  
+
   pthread_mutex_lock(&clients_mutex);
   supprimerClient(args->clients, args->client);
   pthread_mutex_unlock(&clients_mutex);

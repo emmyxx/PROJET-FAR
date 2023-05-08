@@ -1,5 +1,7 @@
+#include <stdlib.h>
+#include <stdbool.h>
+
 #include "../include/constantes.h"
-#include "../include/common.h"
 #include "../include/serveur/gestionnaireClients.h"
 #include "../include/serveur/serveur.h"
 
@@ -23,7 +25,7 @@ void detruireTableauClients(client **listeClients)
     free(listeClients);
 }
 
-int avoirNombreClientsConnectes(client **listeClients)
+int avoirNombreClientsConnectes(const client **listeClients)
 {
     int nbClientsConnectes = 0;
     for (int i = 0; i < NB_CLIENTS_MAX; i++)

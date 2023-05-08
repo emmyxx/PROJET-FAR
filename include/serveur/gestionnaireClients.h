@@ -32,7 +32,7 @@ void detruireTableauClients(client **listeClients);
  * @param listeClients Pointeur vers un tableau de pointeurs de structures client.
  * @return int Retourne le nombre de clients connectés, entre 0 et NB_CLIENTS_MAX.
  */
-int avoirNombreClientsConnectes(client **listeClients);
+int avoirNombreClientsConnectes(const client **listeClients);
 
 /**
  * @brief Ajoute un client au tableau des clients.
