@@ -1,18 +1,14 @@
 #ifndef GESTIONNAIRE_CLIENTS_H
 #define GESTIONNAIRE_CLIENTS_H
 
+#include "../include/constantes.h"
+
 typedef struct client
 {
     int socket;
     char nom[TAILLE_PSEUDO];
     bool estConnecte;
 } client;
-
-typedef struct argsThread
-{
-    client *client;
-    client **clients;
-} argsThread;
 
 /**
  * @brief Crée un tableau de clients.
@@ -46,7 +42,7 @@ int ajouterClient(client **listeClients, client *client);
  * @brief Supprime un client du tableau des clients.
  * @param listeClients Pointeur vers un tableau de pointeurs de structures client.
  * @param client Pointeur vers la structure client à supprimer du tableau.
- * @return int Retourne 0 si le client est supprimé avec succès, -1 si le client 
+ * @return int Retourne 0 si le client est supprimé avec succès, -1 si le client
  * n'est pas présent dans le tableau.
  */
 int supprimerClient(client **listeClients, client *client);
@@ -56,7 +52,7 @@ int supprimerClient(client **listeClients, client *client);
  * @param listeClients Pointeur vers un tableau de pointeurs de structures client.
  * @param pseudo Pointeur vers une chaîne de caractères contenant le pseudo à vérifier.
  * @return bool Retourne true si le pseudo est déjà utilisé, false sinon.
-*/
+ */
 bool pseudoExiste(const client **listeClients, const char *pseudo);
 
 #endif

@@ -1,3 +1,8 @@
+/* -------------------------------------------------------------------------- */
+/*           Structures de données des différents types de messages           */
+/*           que les clients ou le serveur peuvent s'envoyer.                 */
+/* -------------------------------------------------------------------------- */
+
 #ifndef TYPES_MESSAGE_H
 #define TYPES_MESSAGE_H
 
@@ -6,10 +11,9 @@
 typedef enum
 {
     MESSAGE_BROADCAST,
+    MESSAGE_PRIVE,
     PSEUDO,
     MESSAGE_ALERTE,
-    MESSAGE_SERVEUR,
-    MESSAGE_PRIVE,
 } TypeMessage;
 
 typedef struct

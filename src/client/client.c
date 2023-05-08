@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
     gestionnaireErreur("Erreur lors de l'envoi du pseudo au serveur");
 
   pthread_t threadRecevoir, threadEnvoyer;
-  if (pthread_create(&threadEnvoyer, NULL, threadEnvoiMessage, &socketServeur) != 0)
+  if (pthread_create(&threadEnvoyer, NULL, threadEnvoiMessages, &socketServeur) != 0)
     gestionnaireErreur("Erreur lors de la création du thread d'envoi");
 
   if (pthread_create(&threadRecevoir, NULL, threadReceptionMessages, &socketServeur) != 0)
@@ -74,7 +74,7 @@ int creerConnexionServeur(const char *ipServeur, const int portServeur)
   return socketServeur;
 }
 
-void *threadEnvoiMessage(void *arg)
+void *threadEnvoiMessages(void *arg)
 {
   const int socketServeur = *(int *)arg;
   char saisie[TAILLE_SAISIE_CLIENT];

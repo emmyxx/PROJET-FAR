@@ -2,6 +2,7 @@
 #include "../include/common.h"
 #include "../include/serveur/serveur.h"
 #include "../include/serveur/gestionnaireClients.h"
+#include "../include/serveur/routageMessageRecu.h"
 
 pthread_mutex_t clients_mutex;
 
@@ -9,7 +10,13 @@ int main(int argc, char *argv[])
 {
   gestionnaireArguments(argc, argv);
   const int port = atoi(argv[1]);
-  const int socketEcouteur = creerSocketEcouteur(port, NB_CLIENTS_EN_ATTENTE);
+
+  const int socketEcoute = creersocketEcoute(port);
+  if (socketEcoute < 0)
+  {
+    perror("Erreur de création du socket écouteur");
+    exit(EXIT_FAILURE);
+  }
 
   client **clients = creerTableauClients(NB_CLIENTS_MAX);
 
@@ -25,10 +32,14 @@ int main(int argc, char *argv[])
       client *nouveauClient = (client *)malloc(sizeof(client));
 
       // Attend qu'un client se connecte
-      nouveauClient->socket = accepterClient(socketEcouteur);
+      nouveauClient->socket = accepterClient(socketEcoute);
+
       if (nouveauClient->socket < 0)
-        gestionnaireErreur("Erreur d'acceptation du client");
-      
+      {
+        perror("Erreur d'acceptation d'un client");
+        break;
+      }
+
       nouveauClient->estConnecte = true;
 
       argsThread *args = (argsThread *)malloc(sizeof(argsThread));
@@ -39,24 +50,24 @@ int main(int argc, char *argv[])
       ajouterClient(clients, nouveauClient);
       pthread_mutex_unlock(&clients_mutex);
 
-      pthread_t threadReception;
-      pthread_create(&threadReception, NULL, receptionMessages, args);
+      pthread_t threadClient;
+      pthread_create(&threadClient, NULL, threadTraitementMessagesClient, args);
     }
   }
 
   pthread_mutex_destroy(&clients_mutex);
 
   free(clients);
-  close(socketEcouteur);
+  close(socketEcoute);
   printf("Fin du programme\n");
   exit(EXIT_SUCCESS);
 }
 
-int accepterClient(const int socketEcouteur)
+int accepterClient(const int socketEcoute)
 {
   struct sockaddr_in adresseClient;
   socklen_t longueurAdrClient = sizeof(struct sockaddr_in);
-  int socketClient = accept(socketEcouteur, (struct sockaddr *)&adresseClient, &longueurAdrClient);
+  int socketClient = accept(socketEcoute, (struct sockaddr *)&adresseClient, &longueurAdrClient);
   return socketClient < 0 ? -1 : socketClient;
 }
 
@@ -72,28 +83,28 @@ void gestionnaireArguments(int argc, char *argv[])
   }
 }
 
-int creerSocketEcouteur(int port, int nbClientsEnAttente)
+int creersocketEcoute(int port)
 {
-  int socketEcouteur = socket(PF_INET, SOCK_STREAM, 0);
+  int socketEcoute = socket(PF_INET, SOCK_STREAM, 0);
 
-  if (socketEcouteur < 0)
-    gestionnaireErreur("Erreur de création de la socket");
+  if (socketEcoute < 0)
+    return -1;
 
   struct sockaddr_in adresseEcouteur;
   adresseEcouteur.sin_family = AF_INET;
   adresseEcouteur.sin_addr.s_addr = INADDR_ANY;
   adresseEcouteur.sin_port = htons(port);
 
-  if (bind(socketEcouteur, (struct sockaddr *)&adresseEcouteur, sizeof(adresseEcouteur)) < 0)
-    gestionnaireErreur("Erreur de nommage de la socket");
+  if (bind(socketEcoute, (struct sockaddr *)&adresseEcouteur, sizeof(adresseEcouteur)) < 0)
+    return -1;
 
-  if (listen(socketEcouteur, nbClientsEnAttente) < 0)
-    gestionnaireErreur("Erreur de passage en mode écoute");
+  if (listen(socketEcoute, NB_CLIENTS_EN_ATTENTE) < 0)
+    return -1;
 
-  return socketEcouteur;
+  return socketEcoute;
 }
 
-void *receptionMessages(void *arg)
+void *threadTraitementMessagesClient(void *arg)
 {
   argsThread *args = (argsThread *)arg;
   client **listeClients = args->clients;
@@ -108,7 +119,7 @@ void *receptionMessages(void *arg)
   else if (reponse == 0)
     clientCourant->estConnecte = false;
   else
-    controlleurConnexion((const client **)listeClients, clientCourant, message);
+    recevoirPseudo((const client **)listeClients, clientCourant, message);
 
   while (clientCourant->estConnecte)
   {
@@ -135,32 +146,7 @@ void *receptionMessages(void *arg)
   pthread_exit(NULL);
 }
 
-int routageMessageRecu(client **listeClients, client *clientCourant, void *message)
-{
-  const TypeMessage typeMessage = *(TypeMessage *)message;
-
-  if (typeMessage == MESSAGE_BROADCAST)
-  {
-    MessageBroadcast messageBroadcast = *(MessageBroadcast *)message;
-    return controlleurMessageBroadcast((const client **)listeClients, (const client *)clientCourant, messageBroadcast);
-  }
-
-  if (typeMessage == PSEUDO)
-  {
-    AttributionPseudo pseudo = *(AttributionPseudo *)message;
-    return controlleurAttributionPseudo((const client **)listeClients, clientCourant, pseudo);
-  }
-
-  if (typeMessage == MESSAGE_PRIVE)
-  {
-    MessagePrive messagePrive = *(MessagePrive *)message;
-    return controlleurMessagePrive((const client **)listeClients, (const client *)clientCourant, messagePrive);
-  }
-
-  return -1;
-}
-
-int controlleurConnexion(const client **listeClients, client *clientCourant, void *message)
+static int recevoirPseudo(const client **listeClients, client *clientCourant, void *message)
 {
   const TypeMessage typeMessage = *(TypeMessage *)message;
   if (typeMessage != PSEUDO)
@@ -185,80 +171,5 @@ int controlleurConnexion(const client **listeClients, client *clientCourant, voi
   envoyerMessageAlerte(clientCourant, messageBienvenue, INFORMATION);
   // TODO indiquer à tous les clients que le nouveau client s'est connecté
   strcpy(clientCourant->nom, pseudo.pseudo);
-  return 0;
-}
-
-int controlleurMessageBroadcast(const client **listeClients, const client *clientCourant, MessageBroadcast messageBroadcast)
-{
-  strcpy(messageBroadcast.expediteur, clientCourant->nom);
-  broadcast(listeClients, clientCourant, &messageBroadcast);
-  printf("%s broadcast : \"%s\"\n", clientCourant->nom, messageBroadcast.message);
-  return 0;
-}
-
-int controlleurAttributionPseudo(const client **listeClients, client *clientCourant, AttributionPseudo pseudo)
-{
-  if (pseudoExiste(listeClients, pseudo.pseudo))
-  {
-    envoyerMessageAlerte(clientCourant, "Ce pseudonyme est déjà utilisé.", AVERTISSEMENT);
-    return -1;
-  }
-
-  strcpy(clientCourant->nom, pseudo.pseudo);
-  return 0;
-}
-
-int controlleurMessagePrive(const client **listeClients, const client *clientCourant, MessagePrive messagePrive)
-{
-  printf("Destinataire : %s\n", messagePrive.destinataire);
-  if (strcmp(messagePrive.destinataire, clientCourant->nom) == 0)
-  {
-    envoyerMessageAlerte(clientCourant, "Vous ne pouvez pas vous envoyer un message privé.", AVERTISSEMENT);
-    return -1;
-  }
-
-  if (messagePrive.message == NULL || strlen(messagePrive.message) == 0)
-  {
-    envoyerMessageAlerte(clientCourant, "Vous ne pouvez pas envoyer un message vide.", AVERTISSEMENT);
-    return -1;
-  }
-
-  strcpy(messagePrive.expediteur, clientCourant->nom);
-  for (int i = 0; i < NB_CLIENTS_MAX; i++)
-  {
-    if (listeClients[i] != NULL && strcmp(listeClients[i]->nom, messagePrive.destinataire) == 0)
-    {
-      if (send(listeClients[i]->socket, &messagePrive, TAILLE_MESSAGE_TCP, 0) < 0)
-        return -1;
-      return 0;
-    }
-  }
-
-  envoyerMessageAlerte(clientCourant, "Ce client n'existe pas.", AVERTISSEMENT);
-  return -1;
-}
-
-int envoyerMessageAlerte(const client *clientCourant, char *message, TypeAlerte typeAlerte)
-{
-  MessageAlerte messageAlerte;
-  messageAlerte.typeMessage = MESSAGE_ALERTE;
-  messageAlerte.typeAlerte = typeAlerte;
-  strcpy(messageAlerte.message, message);
-  if (send(clientCourant->socket, &messageAlerte, TAILLE_MESSAGE_TCP, 0) < 0)
-    return -1;
-  return 0;
-}
-
-int broadcast(const client **listeClients, const client *clientCourant, const void *message)
-{
-  for (int i = 0; i < NB_CLIENTS_MAX; i++)
-  {
-    if (listeClients[i] != NULL && listeClients[i] != clientCourant)
-    {
-      if (send(listeClients[i]->socket, message, TAILLE_MESSAGE_TCP, 0) < 0)
-        return -1;
-    }
-  }
-
   return 0;
 }

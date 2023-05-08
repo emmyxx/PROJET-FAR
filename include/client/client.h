@@ -23,7 +23,7 @@ int recevoirMessagePrive(const MessagePrive messagePrive);
 /* -------------------------------------------------------------------------- */
 /*                  Saisie, formattage et envoi des messages                  */
 /* -------------------------------------------------------------------------- */
-void *threadEnvoiMessage(void *arg);
+void *threadEnvoiMessages(void *arg);
 
 /**
  * @brief Lit une chaîne de caractères à partir de l'entrée standard.
