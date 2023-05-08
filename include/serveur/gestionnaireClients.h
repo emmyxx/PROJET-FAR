@@ -51,4 +51,12 @@ int ajouterClient(client **listeClients, client *client);
  */
 int supprimerClient(client **listeClients, client *client);
 
+/**
+ * @brief Vérifie si un pseudo est déjà utilisé par un client.
+ * @param listeClients Pointeur vers un tableau de pointeurs de structures client.
+ * @param pseudo Pointeur vers une chaîne de caractères contenant le pseudo à vérifier.
+ * @return bool Retourne true si le pseudo est déjà utilisé, false sinon.
+*/
+bool pseudoExiste(const client **listeClients, const char *pseudo);
+
 #endif

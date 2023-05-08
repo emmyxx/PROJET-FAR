@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include "../include/constantes.h"
 #include "../include/serveur/gestionnaireClients.h"
@@ -63,4 +64,23 @@ int supprimerClient(client **listeClients, client *client)
         }
     }
     return -1;
+}
+
+/**
+ * @brief Vérifie si un pseudo est déjà utilisé par un client.
+ * @param listeClients Pointeur vers un tableau de pointeurs de structures client.
+ * @param pseudo Pointeur vers une chaîne de caractères contenant le pseudo à vérifier.
+ * @return bool Retourne true si le pseudo est déjà utilisé, false sinon.
+ */
+bool pseudoExiste(const client **listeClients, const char *pseudo)
+{
+    for (int i = 0; i < NB_CLIENTS_MAX; i++)
+    {
+        if (listeClients[i] != NULL && strcmp(listeClients[i]->nom, pseudo) == 0)
+        {
+            return true;
+        }
+    }
+
+    return false;
 }

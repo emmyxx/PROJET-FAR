@@ -29,7 +29,6 @@ int controlleurMessageBroadcast(const client **listeClients, const client *clien
 int controlleurAttributionPseudo(const client **listeClients, client *clientCourant, AttributionPseudo pseudo);
 int controlleurMessagePrive(const client **listeClients, const client *clientCourant, MessagePrive messagePrive);
 int envoyerMessageAlerte(const client *clientCourant, char *message, TypeAlerte niveauAlerte);
-bool pseudoExiste(const client **listeClients, const char *pseudo);
 int broadcast(const client **listeClients, const client *clientCourant, const void *messageFormate);
 
 #endif

@@ -238,19 +238,6 @@ int controlleurMessagePrive(const client **listeClients, const client *clientCou
   return -1;
 }
 
-bool pseudoExiste(const client **listeClients, const char *pseudo)
-{
-  for (int i = 0; i < NB_CLIENTS_MAX; i++)
-  {
-    if (listeClients[i] != NULL && strcmp(listeClients[i]->nom, pseudo) == 0)
-    {
-      return true;
-    }
-  }
-
-  return false;
-}
-
 int envoyerMessageAlerte(const client *clientCourant, char *message, TypeAlerte typeAlerte)
 {
   MessageAlerte messageAlerte;
