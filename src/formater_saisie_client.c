@@ -1,3 +1,4 @@
+#include <constantes.h>
 #include "../include/common.h"
 #include "../include/formater_saisie_client.h"
 

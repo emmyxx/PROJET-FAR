@@ -1,3 +1,4 @@
+#include <constantes.h>
 #include "../include/common.h"
 
 void gestionnaireErreur(const char *message)
