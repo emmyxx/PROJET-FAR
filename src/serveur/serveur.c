@@ -146,7 +146,7 @@ void *threadTraitementMessagesClient(void *arg)
   pthread_exit(NULL);
 }
 
-static int recevoirPseudo(const client **listeClients, client *clientCourant, void *message)
+int recevoirPseudo(const client **listeClients, client *clientCourant, void *message)
 {
   const TypeMessage typeMessage = *(TypeMessage *)message;
   if (typeMessage != PSEUDO)
