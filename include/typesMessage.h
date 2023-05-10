@@ -14,6 +14,7 @@ typedef enum
     MESSAGE_PRIVE,
     PSEUDO,
     MESSAGE_ALERTE,
+    INFORMATIONS_FICHIER,
 } TypeMessage;
 
 typedef struct
@@ -43,5 +44,12 @@ typedef struct
     char destinataire[TAILLE_PSEUDO];
     char message[TAILLE_SAISIE_CLIENT];
 } MessagePrive;
+
+typedef struct
+{
+    TypeMessage typeMessage;
+    int nombreOctets;
+    char nomFichier[TAILLE_NOM_FICHIER];
+} InformationsFichier;
 
 #endif

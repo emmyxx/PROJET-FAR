@@ -286,10 +286,20 @@ int routageEnvoiMessage(const char *saisie, const int socketServeur)
   /*                Commandes qui envoient un message au serveur                */
   /* -------------------------------------------------------------------------- */
   char *messageFormate = formater(saisie);
+
   if (messageFormate == NULL)
     return -1;
 
-  if (send(socketServeur, messageFormate, TAILLE_MESSAGE_TCP, 0) < 0)
+  if (*(TypeMessage *)messageFormate == INFORMATIONS_FICHIER)
+  {
+    pthread_t idthreadEnvoiFichier;    
+    if (pthread_create(&idthreadEnvoiFichier, NULL, threadEnvoiFichier, (int *)&socketServeur) != 0)
+      gestionnaireErreur("Erreur lors de la création du thread d'envoi de fichier");
+    // Libère les ressources du thread dès qu'il a fini son exécution
+    pthread_detach(idthreadEnvoiFichier);
+  }
+
+  else if (send(socketServeur, messageFormate, TAILLE_MESSAGE_TCP, 0) < 0)
   {
     printf("⚠️  \033[31mErreur lors de l'envoi du message: %s\033[0m\n", strerror(errno));
     free(messageFormate);
@@ -299,3 +309,16 @@ int routageEnvoiMessage(const char *saisie, const int socketServeur)
   free(messageFormate);
   return 0;
 }
+
+/* -------------------------------------------------------------------------- */
+/*                       Réception et envoi des fichiers                      */
+/* -------------------------------------------------------------------------- */
+void *threadEnvoiFichier(void *arg)
+{
+  const int socketServeur = *(int *)arg;
+
+  printf("Envoi de fichier au socket %d\n", socketServeur);
+  return NULL;
+}
+
+void *threadReceptionFichier(void *arg);

@@ -43,4 +43,10 @@ void *threadTraitementMessagesClient(void *arg);
 */
 int recevoirPseudo(const client **listeClients, client *clientCourant, void *message);
 
+/* -------------------------------------------------------------------------- */
+/*                       Réception et envoi des fichiers                      */
+/* -------------------------------------------------------------------------- */
+void *threadEnvoiFichier(void *arg);
+void *threadReceptionFichier(void *arg);
+
 #endif

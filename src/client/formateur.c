@@ -6,6 +6,7 @@
 static MessageBroadcast *formaterEnBroadcast(const char *saisieClient);
 static AttributionPseudo *formaterEnAttributionPseudo(char *saisieClient);
 static MessagePrive *formaterEnMessagePrive(char *saisieClient);
+static InformationsFichier *formaterEnInformationsFichier(char *saisieClient);
 
 void *formater(const char *saisie)
 {
@@ -27,6 +28,9 @@ void *formater(const char *saisie)
 
     if (strcmp(nomCommande, "/mp") == 0)
         return formaterEnMessagePrive(saisieSansCommande);
+
+    if (strcmp(nomCommande, "/fichier") == 0)
+        return formaterEnInformationsFichier(saisieSansCommande);
 
     printf("⚠️  \033[31mCommande inconnue\033[0m\n");
 
@@ -79,4 +83,20 @@ static MessagePrive *formaterEnMessagePrive(char *saisieClient)
     strcpy(messagePrive->message, message);
 
     return messagePrive;
+}
+
+static InformationsFichier *formaterEnInformationsFichier(char *saisieClient)
+{
+    const char *nomFichier = strtok(saisieClient, " ");
+    if (nomFichier == NULL)
+    {
+        errno = EINVAL;
+        return NULL;
+    }
+
+    InformationsFichier *informationsFichier = (InformationsFichier *)malloc(sizeof(InformationsFichier));
+    informationsFichier->typeMessage = INFORMATIONS_FICHIER;
+    strcpy(informationsFichier->nomFichier, nomFichier);
+
+    return informationsFichier;
 }

@@ -13,6 +13,12 @@
 // La taille maximale du pseudonyme d'un client.
 #define TAILLE_PSEUDO 20
 
+// La taille maximale du nom d'un fichier.
+#define TAILLE_NOM_FICHIER 255
+
+// La taille maximale d'un morceau de fichier envoyé en TCP.
+#define TAILLE_MORCEAU_FICHIER 1024
+
 // Les différents niveaux d'importance des messages des messages 
 // d'alerte envoyés par le serveur.
 typedef enum

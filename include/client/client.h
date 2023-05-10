@@ -36,3 +36,9 @@ int entrerMessage(char *message, const int tailleMessage);
 
 int routageEnvoiMessage(const char *saisie, const int socketServeur);
 void nettoyerBufferEntree();
+
+/* -------------------------------------------------------------------------- */
+/*                       Réception et envoi des fichiers                      */
+/* -------------------------------------------------------------------------- */
+void *threadEnvoiFichier(void *arg);
+void *threadReceptionFichier(void *arg);
