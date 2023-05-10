@@ -42,6 +42,7 @@ int main(int argc, char *argv[])
 
       nouveauClient->estConnecte = true;
 
+      // TODO free ce malloc
       argsThread *args = (argsThread *)malloc(sizeof(argsThread));
       args->client = nouveauClient;
       args->clients = clients;
@@ -143,6 +144,7 @@ void *threadTraitementMessagesClient(void *arg)
   supprimerClient(args->clients, args->client);
   pthread_mutex_unlock(&clients_mutex);
 
+  // TODO tuer le thread zombie
   pthread_exit(NULL);
 }
 

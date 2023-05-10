@@ -8,9 +8,10 @@ int main(int argc, char *argv[])
 {
   gestionnaireArguments(argc, argv);
 
-  // Gestion du CTRL+C
+  // Arrête le programme proprement lorsqu'on appuie sur Ctrl+C
   signal(SIGINT, gestionnaireSignal);
 
+  // Se connecte au serveur
   const char *ipServeur = argv[1];
   const int portServeur = atoi(argv[2]);
   char *pseudo = argv[3];
@@ -21,6 +22,8 @@ int main(int argc, char *argv[])
     afficherMessageAlerte("Erreur : le pseudo est trop long.\n", ERREUR);
     exit(EXIT_FAILURE);
   }
+
+  // Envoie le pseudo passé en argument au serveur
   AttributionPseudo attributionPseudo;
   attributionPseudo.typeMessage = PSEUDO;
   strcpy(attributionPseudo.pseudo, pseudo);
