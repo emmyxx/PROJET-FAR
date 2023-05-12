@@ -9,3 +9,5 @@
 - Les clients peuvent quitter une conversation ✅
 - Les clients peuvent afficher les commandes disponibles ✅
 - On doit utiliser un mutex sur le tableau des clients ✅
+
+### Sprint 3
