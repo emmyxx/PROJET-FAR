@@ -97,6 +97,7 @@ static InformationsFichier *formaterEnInformationsFichier(char *saisieClient)
     InformationsFichier *informationsFichier = (InformationsFichier *)malloc(sizeof(InformationsFichier));
     informationsFichier->typeMessage = INFORMATIONS_FICHIER;
     strcpy(informationsFichier->nomFichier, nomFichier);
+    // TODO mettre dans la structure de données la taille du fichier
 
     return informationsFichier;
 }

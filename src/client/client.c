@@ -285,6 +285,15 @@ int routageEnvoiMessage(const char *saisie, const int socketServeur)
   /* -------------------------------------------------------------------------- */
   /*                Commandes qui envoient un message au serveur                */
   /* -------------------------------------------------------------------------- */
+  // TODO faire l'interface pour sélectionner les fichiers que l'on veut envoyer 
+  // Il faut ensuite envoyer le lien du fichier dans le formateur
+
+  // On affiche les fichiers du répertoire courant (retourne -1 si le répertoire est vide)
+  // afficherFichiers();
+  // On demande à l'utilisateur de sélectionner un des fichiers
+  // demanderFichier();
+  // On envoie le nom du fichier au formateur
+  
   char *messageFormate = formater(saisie);
 
   if (messageFormate == NULL)
