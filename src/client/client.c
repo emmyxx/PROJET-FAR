@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
   AttributionPseudo attributionPseudo;
   attributionPseudo.typeMessage = PSEUDO;
   strcpy(attributionPseudo.pseudo, pseudo);
-  if (write(socketServeur, &attributionPseudo, TAILLE_MESSAGE_TCP) == -1)
+  if (send(socketServeur, &attributionPseudo, TAILLE_MESSAGE_TCP, 0) == -1)
     gestionnaireErreur("Erreur lors de l'envoi du pseudo au serveur");
 
   pthread_t threadRecevoir, threadEnvoyer;

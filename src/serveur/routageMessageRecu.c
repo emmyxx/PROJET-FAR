@@ -65,7 +65,7 @@ static int controlleurMessagePrive(const client **listeClients, const client *cl
     return -1;
   }
 
-  if (messagePrive.message == NULL || strlen(messagePrive.message) == 0)
+  if (strlen(messagePrive.message) == 0)
   {
     envoyerMessageAlerte(clientCourant, "Vous ne pouvez pas envoyer un message vide.", AVERTISSEMENT);
     return -1;
