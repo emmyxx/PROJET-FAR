@@ -3,6 +3,9 @@
 #include "../include/common.h"
 #include "../include/client/client.h"
 #include "../include/client/formateur.h"
+#include <dirent.h>
+#include <sys/stat.h>
+#include <stdio.h>
 
 int main(int argc, char *argv[])
 {
@@ -285,15 +288,11 @@ int routageEnvoiMessage(const char *saisie, const int socketServeur)
   /* -------------------------------------------------------------------------- */
   /*                Commandes qui envoient un message au serveur                */
   /* -------------------------------------------------------------------------- */
-  // TODO faire l'interface pour sélectionner les fichiers que l'on veut envoyer 
-  // Il faut ensuite envoyer le lien du fichier dans le formateur
+  // TableauInformationsFichiers tableauFichiers = recupererFichier("."); // Lit tout les fichiers du dossier courant et met leur informations dans un tableau de InformationsFichier
+  // afficherFichiers(tableauFichiers);                                   // Passe en paramètres le tableau de InformationsFichier et print les informations de chaque fichier
+  // InformationsFichier fichierChoisi = choisirFichier(tableauFichiers); // Demande à l'utilisateur de choisir un fichier parmi ceux affichés
+  // Envoyer le fichier choisi au serveur
 
-  // On affiche les fichiers du répertoire courant (retourne -1 si le répertoire est vide)
-  // afficherFichiers();
-  // On demande à l'utilisateur de sélectionner un des fichiers
-  // demanderFichier();
-  // On envoie le nom du fichier au formateur
-  
   char *messageFormate = formater(saisie);
 
   if (messageFormate == NULL)
@@ -301,7 +300,7 @@ int routageEnvoiMessage(const char *saisie, const int socketServeur)
 
   if (*(TypeMessage *)messageFormate == INFORMATIONS_FICHIER)
   {
-    pthread_t idthreadEnvoiFichier;    
+    pthread_t idthreadEnvoiFichier;
     if (pthread_create(&idthreadEnvoiFichier, NULL, threadEnvoiFichier, (int *)&socketServeur) != 0)
       gestionnaireErreur("Erreur lors de la création du thread d'envoi de fichier");
     // Libère les ressources du thread dès qu'il a fini son exécution
@@ -318,6 +317,22 @@ int routageEnvoiMessage(const char *saisie, const int socketServeur)
   free(messageFormate);
   return 0;
 }
+
+//  // On affiche les fichiers du répertoire courant (retourne -1 si le répertoire est vide)
+// bool afficherFichiers(char *cheminRepertoire) {
+//     DIR *d;
+//     struct dirent *dir;
+//     struct stat filestat;
+//     d = opendir(cheminRepertoire);
+//     if (d) {
+//         while ((dir = readdir(d)) != NULL) {
+//             stat(dir->d_name, &filestat);
+//             printf("%s, %ld bytes\n", dir->d_name, filestat.st_size);
+//         }
+//         closedir(d);
+//     }
+//     return true;
+// }
 
 /* -------------------------------------------------------------------------- */
 /*                       Réception et envoi des fichiers                      */

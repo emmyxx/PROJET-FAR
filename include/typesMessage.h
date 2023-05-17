@@ -48,7 +48,7 @@ typedef struct
 typedef struct
 {
     TypeMessage typeMessage;
-    int nombreOctets;
+    int tailleFichier;
     char nomFichier[TAILLE_NOM_FICHIER];
 } InformationsFichier;
 

@@ -11,6 +11,46 @@ int afficherManuel();
 
 
 /* -------------------------------------------------------------------------- */
+/*           Affichage et sélection d'un fichier dans un répertoire           */
+/* -------------------------------------------------------------------------- */
+
+// Structure qui permet d'indiquer la taille d'un tableau de structures InformationsFichier.
+typedef struct {
+    InformationsFichier* tableau;
+    int taille;
+} TableauInformationsFichiers;
+
+/** 
+ * @brief Récupère les informations des fichiers présents dans le dossier
+ * @param cheminDossier Le chemin du dossier où l'on veut récupérer les informations des fichiers.
+ * @return Une structure contenant un tableau d'informations de fichiers 
+ * ainsi que sa taille ou NULL si une erreur s'est produite.
+ * @note Il faut appeler la fonction libererTableauInformationsFichiers pour libérer la mémoire allouée.
+*/
+TableauInformationsFichiers recupererFichier(char *cheminDossier);
+
+/** 
+ * @brief Affiche les informations d'une structure TableauInformationsFichiers.
+ * @param tableau La structure à afficher.
+*/
+void afficherFichiers(TableauInformationsFichiers tableau);
+
+/**
+ * @brief demande à l'utilisateur de choisir un fichier en entrant son index 
+ * dans le tableau de la structure TableauInformationsFichiers.
+ * @param tableau La structure contenant le tableau d'informations de fichiers.
+ * @return L'index du fichier choisi par l'utilisateur, ou -1 si le tableau est vide.
+*/
+ InformationsFichier choisirFichier(TableauInformationsFichiers tableau);
+
+/** 
+ * @brief Libère la mémoire allouée pour le tableau dans la structure.
+ * @param tableau La structure dont la mémoire du tableau doit être libérée.
+*/
+void libererTableauInformationsFichiers(TableauInformationsFichiers* tableau);
+
+
+/* -------------------------------------------------------------------------- */
 /*                    Réception et traitement des messages                    */
 /* -------------------------------------------------------------------------- */
 void *threadReceptionMessages(void *arg);
