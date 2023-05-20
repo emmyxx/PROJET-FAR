@@ -2,12 +2,12 @@
 #define GESTIONNAIRE_CLIENTS_H
 
 #include "../include/constantes.h"
+#include <stdbool.h>
 
-typedef struct client
-{
-    int socket;
-    char nom[TAILLE_PSEUDO];
-    bool estConnecte;
+typedef struct client {
+  int socket;
+  char nom[TAILLE_PSEUDO];
+  bool estConnecte;
 } client;
 
 /**

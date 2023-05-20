@@ -1,19 +1,17 @@
-#include "../include/constantes.h"
-#include "../include/common.h"
 #include "../include/serveur/serveur.h"
+#include "../include/common.h"
+#include "../include/constantes.h"
 #include "../include/serveur/gestionnaireClients.h"
 #include "../include/serveur/routageMessageRecu.h"
 
 pthread_mutex_t clients_mutex;
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
   gestionnaireArguments(argc, argv);
   const int port = atoi(argv[1]);
 
   const int socketEcoute = creersocketEcoute(port);
-  if (socketEcoute < 0)
-  {
+  if (socketEcoute < 0) {
     perror("Erreur de création du socket écouteur");
     exit(EXIT_FAILURE);
   }
@@ -24,18 +22,15 @@ int main(int argc, char *argv[])
 
   puts("Serveur démarré");
 
-  while (true)
-  {
+  while (true) {
     // Accepte des clients tant que l'on n'a pas atteint la limite
-    if (avoirNombreClientsConnectes((const client **)clients) < NB_CLIENTS_MAX)
-    {
+    if (avoirNombreClientsConnectes((const client **)clients) < NB_CLIENTS_MAX) {
       client *nouveauClient = (client *)malloc(sizeof(client));
 
       // Attend qu'un client se connecte
       nouveauClient->socket = accepterClient(socketEcoute);
 
-      if (nouveauClient->socket < 0)
-      {
+      if (nouveauClient->socket < 0) {
         perror("Erreur d'acceptation d'un client");
         break;
       }
@@ -64,28 +59,22 @@ int main(int argc, char *argv[])
   exit(EXIT_SUCCESS);
 }
 
-int accepterClient(const int socketEcoute)
-{
+int accepterClient(const int socketEcoute) {
   struct sockaddr_in adresseClient;
   socklen_t longueurAdrClient = sizeof(struct sockaddr_in);
   int socketClient = accept(socketEcoute, (struct sockaddr *)&adresseClient, &longueurAdrClient);
   return socketClient < 0 ? -1 : socketClient;
 }
 
-void gestionnaireArguments(int argc, char *argv[])
-{
-  if (argc != NB_ARGS_ATTENDUS)
-  {
-    fprintf(stderr,
-            "Erreur : %d arguments attendus, mais %d ont été fournis.\n",
-            NB_ARGS_ATTENDUS, argc);
+void gestionnaireArguments(int argc, char *argv[]) {
+  if (argc != NB_ARGS_ATTENDUS) {
+    fprintf(stderr, "Erreur : %d arguments attendus, mais %d ont été fournis.\n", NB_ARGS_ATTENDUS, argc);
     fprintf(stderr, "Utilisation : %s <port>\n", argv[0]);
     exit(EXIT_FAILURE);
   }
 }
 
-int creersocketEcoute(int port)
-{
+int creersocketEcoute(int port) {
   int socketEcoute = socket(PF_INET, SOCK_STREAM, 0);
 
   if (socketEcoute < 0)
@@ -105,8 +94,7 @@ int creersocketEcoute(int port)
   return socketEcoute;
 }
 
-void *threadTraitementMessagesClient(void *arg)
-{
+void *threadTraitementMessagesClient(void *arg) {
   argsThread *args = (argsThread *)arg;
   client **listeClients = args->clients;
   client *clientCourant = args->client;
@@ -122,14 +110,13 @@ void *threadTraitementMessagesClient(void *arg)
   else
     recevoirPseudo((const client **)listeClients, clientCourant, message);
 
-  while (clientCourant->estConnecte)
-  {
+  while (clientCourant->estConnecte) {
     reponse = recv(clientCourant->socket, message, TAILLE_MESSAGE_TCP, 0);
     if (reponse < 0)
-      gestionnaireErreur("Erreur de réception du message"); // FIXME ne pas faire crasher le programme
+      gestionnaireErreur("Erreur de réception du message"); // FIXME ne pas faire crasher le
+                                                            // programme
 
-    if (reponse == 0)
-    {
+    if (reponse == 0) {
       clientCourant->estConnecte = false;
       break;
     }
@@ -148,11 +135,9 @@ void *threadTraitementMessagesClient(void *arg)
   pthread_exit(NULL);
 }
 
-int recevoirPseudo(const client **listeClients, client *clientCourant, void *message)
-{
+int recevoirPseudo(const client **listeClients, client *clientCourant, void *message) {
   const TypeMessage typeMessage = *(TypeMessage *)message;
-  if (typeMessage != PSEUDO)
-  {
+  if (typeMessage != PSEUDO) {
     envoyerMessageAlerte(clientCourant, "Le message TCP d'attritution du pseudonyme est mal formaté.", ERREUR);
     clientCourant->estConnecte = false;
     return -1;
@@ -160,8 +145,7 @@ int recevoirPseudo(const client **listeClients, client *clientCourant, void *mes
 
   AttributionPseudo pseudo = *(AttributionPseudo *)message;
 
-  if (pseudoExiste(listeClients, pseudo.pseudo))
-  {
+  if (pseudoExiste(listeClients, pseudo.pseudo)) {
     envoyerMessageAlerte(clientCourant, "Ce pseudonyme est déjà utilisé.", ERREUR);
     clientCourant->estConnecte = false;
     return -1;

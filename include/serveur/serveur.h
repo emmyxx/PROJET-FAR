@@ -8,10 +8,9 @@
 #include "../typesMessage.h"
 #include "gestionnaireClients.h"
 
-typedef struct argsThread
-{
-    client *client;
-    client **clients;
+typedef struct argsThread {
+  client *client;
+  client **clients;
 } argsThread;
 
 /**
@@ -40,7 +39,7 @@ void *threadTraitementMessagesClient(void *arg);
 /**
  * @brief Traite le premier message reçu d'un client (son pseudo).
  * @note Déconnecte le client si le pseudo est déjà utilisé.
-*/
+ */
 int recevoirPseudo(const client **listeClients, client *clientCourant, void *message);
 
 /* -------------------------------------------------------------------------- */

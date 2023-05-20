@@ -19,13 +19,12 @@
 // La taille maximale du nom d'un fichier.
 #define TAILLE_NOM_FICHIER 255
 
-// Les différents niveaux d'importance des messages des messages 
+// Les différents niveaux d'importance des messages des messages
 // d'alerte envoyés par le serveur.
-typedef enum
-{
-    INFORMATION,
-    AVERTISSEMENT,
-    ERREUR,
+typedef enum {
+  INFORMATION,
+  AVERTISSEMENT,
+  ERREUR,
 } TypeAlerte;
 
 #endif

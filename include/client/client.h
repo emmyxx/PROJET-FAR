@@ -1,5 +1,10 @@
-#define NB_ARGS_ATTENDUS 4
+#include <stdlib.h>
+#include <sys/stat.h>
 
+#include "../typesMessage.h"
+
+#define NB_ARGS_ATTENDUS 4
+#define CHEMIN_DOSSIER_FICHIERS_LOCAUX "./repertoire_client"
 
 /* -------------------------------------------------------------------------- */
 /*                           Divers                                           */
@@ -9,60 +14,54 @@ void gestionnaireSignal(int signum);
 void arreterCommunication();
 int afficherManuel();
 
-
 /* -------------------------------------------------------------------------- */
 /*           Affichage et sélection d'un fichier dans un répertoire           */
 /* -------------------------------------------------------------------------- */
 
-// Structure qui permet d'indiquer la taille d'un tableau de structures InformationsFichier.
-typedef struct {
-    InformationsFichier* tableau;
-    int taille;
-} TableauInformationsFichiers;
-
-/** 
- * @brief Récupère les informations des fichiers présents dans le dossier
- * @param cheminDossier Le chemin du dossier où l'on veut récupérer les informations des fichiers.
- * @return Une structure contenant un tableau d'informations de fichiers 
- * ainsi que sa taille ou NULL si une erreur s'est produite.
- * @note Il faut appeler la fonction libererTableauInformationsFichiers pour libérer la mémoire allouée.
-*/
-TableauInformationsFichiers recupererFichier(char *cheminDossier);
-
-/** 
- * @brief Affiche les informations d'une structure TableauInformationsFichiers.
- * @param tableau La structure à afficher.
-*/
-void afficherFichiers(TableauInformationsFichiers tableau);
+/**
+ * @brief Retourne les informations des fichiers (et non pas dossiers) présents dans le dossier
+ * passé en paramètre.
+ * @param taille Un pointeur vers une variable qui contiendra la taille du
+ * tableau retourné.
+ * @param cheminDossier Le chemin du dossier dont on veut récupérer les
+ * informations des fichiers.
+ * @return Un tableau d'informations sur uniquement les fichiers (et non pas les dossiers) du
+ * chemin du dossier passé en paramètres, ou NULL si une erreur s'est produite.
+ * @note Il faut appeler free() sur le tableau retourné pour libérer la mémoire
+ */
+struct dirent *recupererTableauFichiers(size_t *taille, const char *cheminDossier);
 
 /**
- * @brief demande à l'utilisateur de choisir un fichier en entrant son index 
- * dans le tableau de la structure TableauInformationsFichiers.
- * @param tableau La structure contenant le tableau d'informations de fichiers.
- * @return L'index du fichier choisi par l'utilisateur, ou -1 si le tableau est vide.
-*/
- InformationsFichier choisirFichier(TableauInformationsFichiers tableau);
+ * @brief Affiche les informations des fichiers du chemin passé en paramètres.
+ * @param cheminDossier Le chemin du dossier dont on veut afficher ses fichiers.
+ * @return 0 si l'affichage s'est bien passé, -1 si une erreur s'est produite.
+ */
+int afficherFichiers(const char *cheminDossier);
 
-/** 
- * @brief Libère la mémoire allouée pour le tableau dans la structure.
- * @param tableau La structure dont la mémoire du tableau doit être libérée.
-*/
-void libererTableauInformationsFichiers(TableauInformationsFichiers* tableau);
-
+/**
+ * @brief Demande à l'utilisateur de choisir un fichier en entrant son index
+ * dans le tableau passé en paramètre.
+ * @param informationsFichiers Le tableau d'informations de fichiers.
+ * @param taille La taille du tableau.
+ * @return Les informations du fichier choisi, ou NULL si l'utilisateur a entré
+ * un index invalide.
+ */
+InformationsFichier choisirFichier(const char *cheminDossier);
 
 /* -------------------------------------------------------------------------- */
 /*                    Réception et traitement des messages                    */
 /* -------------------------------------------------------------------------- */
+
 void *threadReceptionMessages(void *arg);
 int routageMessageRecu(void *messageRecu);
 int recevoirMessageBroadcast(const MessageBroadcast messageBroadcast);
 int afficherMessageAlerte(char *message, TypeAlerte typeAlerte);
 int recevoirMessagePrive(const MessagePrive messagePrive);
 
-
 /* -------------------------------------------------------------------------- */
 /*                  Saisie, formattage et envoi des messages                  */
 /* -------------------------------------------------------------------------- */
+
 void *threadEnvoiMessages(void *arg);
 
 /**
@@ -80,5 +79,6 @@ void nettoyerBufferEntree();
 /* -------------------------------------------------------------------------- */
 /*                       Réception et envoi des fichiers                      */
 /* -------------------------------------------------------------------------- */
+
 void *threadEnvoiFichier(void *arg);
 void *threadReceptionFichier(void *arg);
