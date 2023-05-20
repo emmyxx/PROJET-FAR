@@ -48,7 +48,8 @@ int main(int argc, char *argv[]) {
 
 void gestionnaireArguments(int argc, char *argv[]) {
   if (argc != NB_ARGS_ATTENDUS) {
-    fprintf(stderr, "Erreur : %d arguments attendus, mais %d ont été fournis.\n", NB_ARGS_ATTENDUS, argc);
+    fprintf(stderr, "Erreur : %d arguments attendus, mais %d ont été fournis.\n", NB_ARGS_ATTENDUS,
+            argc);
     fprintf(stderr, "Utilisation : %s <adresse_ip> <port> <pseudo>\n", argv[0]);
     exit(EXIT_FAILURE);
   }
@@ -269,9 +270,12 @@ int routageEnvoiMessage(const char *saisie, const int socketServeur) {
   }
 
   if (*(TypeMessage *)messageFormate == INFORMATIONS_FICHIER) {
+    argsThreadFichier args = {socketServeur, *(InformationsFichier *)messageFormate};
     pthread_t idthreadEnvoiFichier;
-    if (pthread_create(&idthreadEnvoiFichier, NULL, threadEnvoiFichier, (int *)&socketServeur) != 0)
+
+    if (pthread_create(&idthreadEnvoiFichier, NULL, threadEnvoiFichier, &args) != 0)
       gestionnaireErreur("Erreur lors de la création du thread d'envoi de fichier");
+
     // Libère les ressources du thread dès qu'il a fini son exécution
     pthread_detach(idthreadEnvoiFichier);
   }
@@ -374,9 +378,24 @@ struct dirent *recupererTableauFichiers(size_t *taille, const char *cheminDossie
 /* --------------------------------------------------------------------------
  */
 void *threadEnvoiFichier(void *arg) {
-  const int socketServeur = *(int *)arg;
+  const argsThreadFichier argsThread = *(argsThreadFichier *)arg;
+  const int socketServeur = argsThread.socketServeur;
+  const InformationsFichier informationsFichier = argsThread.informationsFichier; 
+  char cheminFichier[PATH_MAX];
+  struct stat statsFichier;
 
-  printf("Envoi de fichier au socket %d\n", socketServeur);
+  // Récupération du chemin du fichier
+  strcpy(cheminFichier, CHEMIN_DOSSIER_FICHIERS_LOCAUX);
+  strcat(cheminFichier, informationsFichier.nomFichier);
+
+  // if (stat(cheminFichier, &statsFichier) == -1) {
+  //   perror("Echec lors de la récupération des informations du fichier)");
+  //   errno = EINVAL;
+  //   return NULL;
+  // }
+
+  printf("%s\n", cheminFichier);
+
   return NULL;
 }
 

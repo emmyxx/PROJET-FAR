@@ -15,8 +15,13 @@ void arreterCommunication();
 int afficherManuel();
 
 /* -------------------------------------------------------------------------- */
-/*           Affichage et sélection d'un fichier dans un répertoire           */
+/*                      Envoi et réception des fichiers                       */
 /* -------------------------------------------------------------------------- */
+
+typedef struct {
+  int socketServeur;
+  InformationsFichier informationsFichier;
+} argsThreadFichier;
 
 /**
  * @brief Retourne les informations des fichiers (et non pas dossiers) présents dans le dossier
