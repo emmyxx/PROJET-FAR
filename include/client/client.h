@@ -4,7 +4,7 @@
 #include "../typesMessage.h"
 
 #define NB_ARGS_ATTENDUS 4
-#define CHEMIN_DOSSIER_FICHIERS_LOCAUX "./repertoire_client"
+#define CHEMIN_DOSSIER_FICHIERS_LOCAUX "./repertoire_client/"
 
 /* -------------------------------------------------------------------------- */
 /*                           Divers                                           */
@@ -37,16 +37,6 @@ struct dirent *recupererTableauFichiers(size_t *taille, const char *cheminDossie
  * @return 0 si l'affichage s'est bien passé, -1 si une erreur s'est produite.
  */
 int afficherFichiers(const char *cheminDossier);
-
-/**
- * @brief Demande à l'utilisateur de choisir un fichier en entrant son index
- * dans le tableau passé en paramètre.
- * @param informationsFichiers Le tableau d'informations de fichiers.
- * @param taille La taille du tableau.
- * @return Les informations du fichier choisi, ou NULL si l'utilisateur a entré
- * un index invalide.
- */
-InformationsFichier choisirFichier(const char *cheminDossier);
 
 /* -------------------------------------------------------------------------- */
 /*                    Réception et traitement des messages                    */

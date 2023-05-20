@@ -3,8 +3,8 @@
 #include "../include/common.h"
 #include "../include/constantes.h"
 #include "../include/typesMessage.h"
-#include <limits.h>
 #include <dirent.h>
+#include <limits.h>
 #include <stdio.h>
 #include <sys/stat.h>
 
@@ -249,10 +249,11 @@ int routageEnvoiMessage(const char *saisie, const int socketServeur) {
     return 0;
   }
 
-  else if (strcmp(nomCommande, "/fl") == 0) {
-    afficherFichiers(CHEMIN_DOSSIER_FICHIERS_LOCAUX); // TODO check si ça retourne bien 0
-    // choisirFichier(CHEMIN_DOSSIER_FICHIERS_LOCAUX);
-    // TODO envoyer le fichier
+  // Afficher les fichiers locaux
+  else if (strcmp(nomCommande, "/afl") == 0) {
+    if (afficherFichiers(CHEMIN_DOSSIER_FICHIERS_LOCAUX) == -1)
+      return -1;
+
     return 0;
   }
 
@@ -262,8 +263,10 @@ int routageEnvoiMessage(const char *saisie, const int socketServeur) {
 
   char *messageFormate = formater(saisie);
 
-  if (messageFormate == NULL)
+  if (messageFormate == NULL) {
+    afficherMessageAlerte("Paramètres de la commande invalides.", AVERTISSEMENT);
     return -1;
+  }
 
   if (*(TypeMessage *)messageFormate == INFORMATIONS_FICHIER) {
     pthread_t idthreadEnvoiFichier;
@@ -292,8 +295,14 @@ int afficherFichiers(const char *cheminDossier) {
     return -1;
   }
 
+  if (nombreFichiers == 0) {
+    afficherMessageAlerte("Vous n'avez aucun fichier dans votre dossier.", AVERTISSEMENT);
+    free(informationsFichiers);
+    return -1;
+  }
+
   for (size_t i = 0; i < nombreFichiers; i++) {
-    printf("[%ld] %s\n", i, informationsFichiers[i].d_name);
+    printf("[%ld] %s\n", i + 1, informationsFichiers[i].d_name);
   }
 
   free(informationsFichiers);

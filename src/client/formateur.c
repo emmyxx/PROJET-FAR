@@ -1,3 +1,7 @@
+#include <dirent.h>
+#include <sys/stat.h>
+
+#include "../include/client/client.h"
 #include "../include/client/formateur.h"
 #include "../include/common.h"
 #include "../include/constantes.h"
@@ -28,10 +32,8 @@ void *formater(const char *saisie) {
   if (strcmp(nomCommande, "/mp") == 0)
     return formaterEnMessagePrive(saisieSansCommande);
 
-  if (strcmp(nomCommande, "/fichier") == 0)
+  if (strcmp(nomCommande, "/efl") == 0)
     return formaterEnInformationsFichier(saisieSansCommande);
-
-  printf("⚠️  \033[31mCommande inconnue\033[0m\n");
 
   errno = EINVAL;
   return NULL;
@@ -78,18 +80,49 @@ static MessagePrive *formaterEnMessagePrive(char *saisieClient) {
   return messagePrive;
 }
 
-// FIXME code probablement à suppimer
 static InformationsFichier *formaterEnInformationsFichier(char *saisieClient) {
-  const char *nomFichier = strtok(saisieClient, " ");
-  if (nomFichier == NULL) {
+  size_t nombreFichiers = 0;
+  struct dirent *tableauFichiers;
+  struct stat statsFichier;
+  char cheminFichier[PATH_MAX];
+
+  const char *numeroFichierChaine = strtok(saisieClient, " ");
+  if (numeroFichierChaine == NULL) {
     errno = EINVAL;
     return NULL;
   }
 
-  InformationsFichier *informationsFichier = (InformationsFichier *)malloc(sizeof(InformationsFichier));
-  informationsFichier->typeMessage = INFORMATIONS_FICHIER;
-  strcpy(informationsFichier->nomFichier, nomFichier);
-  // TODO mettre dans la structure de données la taille du fichier
+  const int numeroFichierInt = atoi(numeroFichierChaine) - 1;
 
+  tableauFichiers = recupererTableauFichiers(&nombreFichiers, CHEMIN_DOSSIER_FICHIERS_LOCAUX);
+
+  if (tableauFichiers == NULL || nombreFichiers == 0 || numeroFichierInt < 0 ||
+      numeroFichierInt >= (int)nombreFichiers) {
+    errno = EINVAL;
+    free(tableauFichiers);
+    return NULL;
+  }
+
+  // Récupération du fichier corresondant au numéro donné par le client
+  const struct dirent fichierSelectionne = tableauFichiers[numeroFichierInt];
+
+  // Récupération du chemin du fichier
+  strcpy(cheminFichier, CHEMIN_DOSSIER_FICHIERS_LOCAUX);
+  strcat(cheminFichier, fichierSelectionne.d_name);
+
+  if (stat(cheminFichier, &statsFichier) == -1) {
+    perror("Echec lors de la récupération des informations du fichier");
+    errno = EINVAL;
+    free(tableauFichiers);
+    return NULL;
+  }
+
+  InformationsFichier *informationsFichier =
+      (InformationsFichier *)malloc(sizeof(InformationsFichier));
+  informationsFichier->typeMessage = INFORMATIONS_FICHIER;
+  strcpy(informationsFichier->nomFichier, fichierSelectionne.d_name);
+  informationsFichier->tailleFichier = statsFichier.st_size;
+ 
+  free(tableauFichiers);
   return informationsFichier;
 }

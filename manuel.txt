@@ -3,3 +3,6 @@ Commandes disponibles :
   /mp <pseudo> <message> : envoyer un message privé
   /fin : quitter la messagerie
   /man : afficher l'aide
+  /afl : afficher les fichiers locaux
+  /efl <numéro du fichier> : envoyer un fichier au serveur
+  

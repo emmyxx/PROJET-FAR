@@ -7,6 +7,7 @@
 #define TYPES_MESSAGE_H
 
 #include <limits.h>
+#include <stdio.h>
 
 #include "constantes.h"
 
@@ -44,7 +45,7 @@ typedef struct {
 
 typedef struct {
   TypeMessage typeMessage;
-  int tailleFichier;
+  size_t tailleFichier;
   char nomFichier[NAME_MAX];
 } InformationsFichier;
 
