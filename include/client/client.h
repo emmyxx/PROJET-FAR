@@ -22,7 +22,7 @@ int afficherManuel();
 
 typedef struct {
   int socketServeur;
-  InformationsFichier informationsFichier;
+  MorceauFichier morceauFichier;
 } argsThreadFichier;
 
 /**
@@ -45,7 +45,7 @@ struct dirent *recupererTableauFichiers(size_t *taille, const char *cheminDossie
  */
 int afficherFichiers(const char *cheminDossier);
 
-int envoyerFichier(FILE *pointeurFichier, int socketServeur);
+int envoyerFichier(FILE *pointeurFichier, int socketServeur, MorceauFichier morceauFichier);
 
 /* -------------------------------------------------------------------------- */
 /*                    Réception et traitement des messages                    */

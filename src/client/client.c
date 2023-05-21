@@ -141,15 +141,16 @@ int recevoirMessageBroadcast(const MessageBroadcast messageBroadcast) {
 
 int afficherMessageAlerte(char *message, TypeAlerte typeAlerte) {
   if (typeAlerte == INFORMATION) {
-    printf("\033[3;37m%s\033[0m\n",
-           message); // texte en bleu/gris clair et en italique
+    // texte en bleu/gris clair et en italique
+    printf("\033[3;37m%s\033[0m\n", message);
     return 0;
   } else if (typeAlerte == AVERTISSEMENT) {
-    printf("🔔  \033[33m%s\033[0m\n", message); // texte en orange
+    // texte en orange
+    printf("🔔  \033[33m%s\033[0m\n", message);
     return 0;
   } else if (typeAlerte == ERREUR) {
-    printf("⚠️  \033[1;31m%s\033[0m\n",
-           message); // texte en gras et en rouge
+    // texte en gras et en rouge
+    printf("⚠️  \033[1;31m%s\033[0m\n", message);
     return 0;
   } else {
     return -1;
@@ -206,6 +207,7 @@ int afficherManuel() {
 
   // Vérifier si l'ouverture a réussi
   if (fichier == NULL) {
+    fclose(fichier);
     printf("Erreur lors de l'ouverture du fichier.\n");
     return -1;
   }
@@ -267,8 +269,8 @@ int routageEnvoiMessage(const char *saisie, const int socketServeur) {
     return -1;
   }
 
-  if (*(TypeMessage *)messageFormate == INFORMATIONS_FICHIER) {
-    argsThreadFichier args = {socketServeur, *(InformationsFichier *)messageFormate};
+  if (*(TypeMessage *)messageFormate == MORCEAU_FICHIER) {
+    argsThreadFichier args = {socketServeur, *(MorceauFichier *)messageFormate};
     pthread_t idthreadEnvoiFichier;
 
     if (pthread_create(&idthreadEnvoiFichier, NULL, threadEnvoiFichier, &args) != 0)
@@ -376,18 +378,13 @@ struct dirent *recupererTableauFichiers(size_t *taille, const char *cheminDossie
 void *threadEnvoiFichier(void *arg) {
   const argsThreadFichier argsThread = *(argsThreadFichier *)arg;
   const int socketServeur = argsThread.socketServeur;
-  const InformationsFichier informationsFichier = argsThread.informationsFichier;
+  const MorceauFichier morceauFichier = argsThread.morceauFichier;
   char cheminFichier[PATH_MAX];
   FILE *pointeurFichier;
 
   // Récupération du chemin du fichier
   strcpy(cheminFichier, CHEMIN_DOSSIER_FICHIERS_LOCAUX);
-  strcat(cheminFichier, informationsFichier.nomFichier);
-
-  if (send(socketServeur, &informationsFichier, TAILLE_MESSAGE_TCP, 0) < 0) {
-    printf("⚠️  \033[31mErreur lors de l'envoi du message: %s\033[0m\n", strerror(errno));
-    pthread_exit(NULL);
-  }
+  strcat(cheminFichier, morceauFichier.nomFichier);
 
   pointeurFichier = fopen(cheminFichier, "r");
   if (pointeurFichier == NULL) {
@@ -395,21 +392,54 @@ void *threadEnvoiFichier(void *arg) {
     pthread_exit(NULL);
   }
 
-  envoyerFichier(pointeurFichier, socketServeur);
+  envoyerFichier(pointeurFichier, socketServeur, morceauFichier);
 
+  fclose(pointeurFichier);
   pthread_exit(NULL);
 }
 
-int envoyerFichier(FILE *pointeurFichier, int socketServeur) {
-  MorceauFichier morceauFichier;
-  morceauFichier.typeMessage = MORCEAU_FICHIER;
+int envoyerFichier(FILE *pointeurFichier, int socketServeur, MorceauFichier morceauFichier) {
+  size_t tailleFichier = 0;
 
-  while (fgets(morceauFichier.donnees, TAILLE_MORCEAU_FICHIER, pointeurFichier) != NULL) {
-    if (send(socketServeur, &morceauFichier, TAILLE_MORCEAU_FICHIER, 0) == -1) {
-      perror("Erreur lors de l'envoi du fichier");
-      return -1;
+  while (true) {
+    // Vide le buffer car si fread ne lit pas TAILLE_MORCEAU_FICHIER,
+    // il va garder les anciennes données dans le buffer.
+    memset(morceauFichier.donnees, 0, TAILLE_MORCEAU_FICHIER);
+
+    size_t octetsLus = fread(morceauFichier.donnees, 1, TAILLE_MORCEAU_FICHIER, pointeurFichier);
+
+    if (octetsLus > 0) {
+      morceauFichier.tailleFichier = octetsLus;
+
+      if (feof(pointeurFichier)) {
+        morceauFichier.estDernierMorceau = true;
+      }
+
+      if (send(socketServeur, &morceauFichier, TAILLE_MESSAGE_TCP, 0) == -1) {
+        perror("Erreur lors de l'envoi du fichier");
+        return -1;
+      }
+    }
+
+    tailleFichier += octetsLus;
+
+    // Permet de savoir si fread n'a pas réussi à lire TAILLE_MORCEAU_FICHIER
+    if (octetsLus < TAILLE_MORCEAU_FICHIER) {
+      // Si on est à la fin du fichier
+      if (feof(pointeurFichier)) {
+        morceauFichier.estDernierMorceau = true;
+        break;
+      }
+      // Si on a rencontré une erreur
+      else if (ferror(pointeurFichier)) {
+        perror("Erreur lors de la lecture du fichier");
+        clearerr(pointeurFichier); // clear the error flag
+        return -1;
+      }
     }
   }
+
+  printf("Envoi du fichier terminé. Taille du fichier: %ld octets\n", tailleFichier);
 
   return 0;
 }

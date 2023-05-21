@@ -10,7 +10,7 @@
 static MessageBroadcast *formaterEnBroadcast(const char *saisieClient);
 static AttributionPseudo *formaterEnAttributionPseudo(char *saisieClient);
 static MessagePrive *formaterEnMessagePrive(char *saisieClient);
-static InformationsFichier *formaterEnInformationsFichier(char *saisieClient);
+static MorceauFichier *formaterEnMorceauFichier(char *saisieClient);
 
 void *formater(const char *saisie) {
   // Fait une copie de saisie pour ne pas modifier l'originale
@@ -33,7 +33,7 @@ void *formater(const char *saisie) {
     return formaterEnMessagePrive(saisieSansCommande);
 
   if (strcmp(nomCommande, "/efl") == 0)
-    return formaterEnInformationsFichier(saisieSansCommande);
+    return formaterEnMorceauFichier(saisieSansCommande);
 
   errno = EINVAL;
   return NULL;
@@ -80,7 +80,7 @@ static MessagePrive *formaterEnMessagePrive(char *saisieClient) {
   return messagePrive;
 }
 
-static InformationsFichier *formaterEnInformationsFichier(char *saisieClient) {
+static MorceauFichier *formaterEnMorceauFichier(char *saisieClient) {
   size_t nombreFichiers = 0;
   struct dirent *tableauFichiers;
   struct stat statsFichier;
@@ -117,12 +117,12 @@ static InformationsFichier *formaterEnInformationsFichier(char *saisieClient) {
     return NULL;
   }
 
-  InformationsFichier *informationsFichier =
-      (InformationsFichier *)malloc(sizeof(InformationsFichier));
-  informationsFichier->typeMessage = INFORMATIONS_FICHIER;
-  strcpy(informationsFichier->nomFichier, fichierSelectionne.d_name);
-  informationsFichier->tailleFichier = statsFichier.st_size;
- 
+  MorceauFichier *morceauFichier = (MorceauFichier *)malloc(sizeof(MorceauFichier));
+  morceauFichier->typeMessage = MORCEAU_FICHIER;
+  strcpy(morceauFichier->nomFichier, fichierSelectionne.d_name);
+  morceauFichier->tailleFichier = statsFichier.st_size;
+  morceauFichier->estDernierMorceau = false;
+
   free(tableauFichiers);
-  return informationsFichier;
+  return morceauFichier;
 }

@@ -19,14 +19,7 @@ static int controlleurAttributionPseudo(const client **listeClients, client *cli
                                         AttributionPseudo pseudo);
 static int controlleurMessagePrive(const client **listeClients, const client *clientCourant,
                                    MessagePrive messagePrive);
-static int controlleurInformationsFichier(const InformationsFichier informationsFichier);
-// static int controlleurMorceauFichier(const MorceauFichier morceauFichier);
-
-/* -------------------------------------------------------------------------- */
-/*                Threads de réception et envoi des fichiers                  */
-/* -------------------------------------------------------------------------- */
-// static void *threadEnvoiFichier(void *arg);
-static void *threadReceptionFichier(void *arg);
+static int controlleurMorceauFichier(const MorceauFichier morceauFichier);
 
 /* -------------------------------------------------------------------------- */
 /*                                   Divers                                   */
@@ -53,15 +46,10 @@ int routageMessageRecu(client **listeClients, client *clientCourant, void *messa
                                    messagePrive);
   }
 
-  if (typeMessage == INFORMATIONS_FICHIER) {
-    const InformationsFichier informationsFichier = *(InformationsFichier *)message;
-    return controlleurInformationsFichier(informationsFichier);
+  if (typeMessage == MORCEAU_FICHIER) {
+    const MorceauFichier morceauFichier = *(MorceauFichier *)message;
+    return controlleurMorceauFichier(morceauFichier);
   }
-
-  // if (typeMessage == MORCEAU_FICHIER) {
-  //   const MorceauFichier morceauFichier = *(MorceauFichier *)message;
-  //   return controlleurMorceauFichier(morceauFichier);
-  // }
 
   return -1;
 }
@@ -113,29 +101,36 @@ static int controlleurMessagePrive(const client **listeClients, const client *cl
   return -1;
 }
 
-int controlleurInformationsFichier(const InformationsFichier informationsFichier) {
-  pthread_t idThreadReceptionFichier;
-  InformationsFichier copieInfoFichiers = informationsFichier;
+int controlleurMorceauFichier(const MorceauFichier morceauFichier) {
+  const char *nomFichier = morceauFichier.nomFichier;
+  size_t tailleFichier = morceauFichier.tailleFichier;
+  FILE *fichier;
 
-  if (pthread_create(&idThreadReceptionFichier, NULL, threadReceptionFichier, &copieInfoFichiers) !=
-      0) {
-    perror("Erreur lors de la création du thread de réception des fichiers");
+  char cheminFichier[PATH_MAX];
+  strcpy(cheminFichier, CHEMIN_DOSSIER_FICHIERS_SERVEUR);
+  strcat(cheminFichier, nomFichier);
+
+  if ((fichier = fopen(cheminFichier, "a")) == NULL) {
+    perror("Erreur lors de l'ouverture du fichier");
     return -1;
   }
 
-  pthread_detach(idThreadReceptionFichier);
+  size_t octetsEcrits = fwrite(morceauFichier.donnees, 1, tailleFichier, fichier);
 
+  printf("octetsEcrits : %ld\n", octetsEcrits);
+
+  if (octetsEcrits != tailleFichier) {
+    fprintf(stderr, "Erreur lors de l'écriture dans le fichier\n");
+    fclose(fichier);
+    return -1;
+  }
+
+  if (morceauFichier.estDernierMorceau) {
+    printf("Réception du fichier \"%s\" terminée.\n", nomFichier);
+  }
+
+  fclose(fichier);
   return 0;
-}
-
-static void *threadReceptionFichier(void *arg) {
-  const InformationsFichier informationsFichier = *(InformationsFichier *)arg;
-  const char *nomFichier = informationsFichier.nomFichier;
-  size_t tailleFichier = informationsFichier.tailleFichier;
-
-  printf("Réception du fichier \"%s\" (%ld octets).\n", nomFichier, tailleFichier);
-
-  pthread_exit(NULL);
 }
 
 /**

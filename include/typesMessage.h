@@ -8,6 +8,7 @@
 
 #include <limits.h>
 #include <stdio.h>
+#include <stdbool.h>
 
 #include "constantes.h"
 
@@ -16,7 +17,6 @@ typedef enum {
   MESSAGE_PRIVE,
   PSEUDO,
   MESSAGE_ALERTE,
-  INFORMATIONS_FICHIER,
   MORCEAU_FICHIER
 } TypeMessage;
 
@@ -48,11 +48,8 @@ typedef struct {
   TypeMessage typeMessage;
   size_t tailleFichier;
   char nomFichier[NAME_MAX];
-} InformationsFichier;
-
-typedef struct {
-  TypeMessage typeMessage;
   char donnees[TAILLE_MORCEAU_FICHIER];
+  bool estDernierMorceau;
 } MorceauFichier;
 
 #endif

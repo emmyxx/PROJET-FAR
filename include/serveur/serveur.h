@@ -1,11 +1,12 @@
 #ifndef SERVEUR_H
 #define SERVEUR_H
 
-#define NB_CLIENTS_EN_ATTENTE 8
-#define NB_CLIENTS_MAX 3
-
 #include "../typesMessage.h"
 #include "gestionnaireClients.h"
+
+#define NB_CLIENTS_EN_ATTENTE 8
+#define NB_CLIENTS_MAX 3
+#define CHEMIN_DOSSIER_FICHIERS_SERVEUR "./repertoire_serveur/"
 
 typedef struct argsThread {
   client *client;
