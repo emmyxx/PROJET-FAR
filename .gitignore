@@ -58,3 +58,7 @@ dkms.conf
 .vscode/
 build/
 !Makefile
+repertoire_client/*
+repertoire_serveur/*
+!repertoire_client/exempleClient.md
+!repertoire_serveur/exempleServeur.md
