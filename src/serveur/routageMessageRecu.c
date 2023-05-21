@@ -6,11 +6,13 @@
 #include "../include/serveur/serveur.h"
 #include "../include/typesMessage.h"
 
-
 static int controlleurMessageBroadcast(const client **listeClients, const client *clientCourant,
                                        MessageBroadcast messageBroadcast);
-static int controlleurAttributionPseudo(const client **listeClients, client *clientCourant, AttributionPseudo pseudo);
-static int controlleurMessagePrive(const client **listeClients, const client *clientCourant, MessagePrive messagePrive);
+static int controlleurAttributionPseudo(const client **listeClients, client *clientCourant,
+                                        AttributionPseudo pseudo);
+static int controlleurMessagePrive(const client **listeClients, const client *clientCourant,
+                                   MessagePrive messagePrive);
+static int controlleurFichier(const InformationsFichier informationsFichier);
 static int broadcast(const client **listeClients, const client *clientCourant, const void *message);
 
 int routageMessageRecu(client **listeClients, client *clientCourant, void *message) {
@@ -18,7 +20,8 @@ int routageMessageRecu(client **listeClients, client *clientCourant, void *messa
 
   if (typeMessage == MESSAGE_BROADCAST) {
     MessageBroadcast messageBroadcast = *(MessageBroadcast *)message;
-    return controlleurMessageBroadcast((const client **)listeClients, (const client *)clientCourant, messageBroadcast);
+    return controlleurMessageBroadcast((const client **)listeClients, (const client *)clientCourant,
+                                       messageBroadcast);
   }
 
   if (typeMessage == PSEUDO) {
@@ -28,7 +31,13 @@ int routageMessageRecu(client **listeClients, client *clientCourant, void *messa
 
   if (typeMessage == MESSAGE_PRIVE) {
     MessagePrive messagePrive = *(MessagePrive *)message;
-    return controlleurMessagePrive((const client **)listeClients, (const client *)clientCourant, messagePrive);
+    return controlleurMessagePrive((const client **)listeClients, (const client *)clientCourant,
+                                   messagePrive);
+  }
+
+  if (typeMessage == INFORMATIONS_FICHIER) {
+    const InformationsFichier informationsFichier = *(InformationsFichier *)message;
+    return controlleurFichier(informationsFichier);
   }
 
   return -1;
@@ -42,7 +51,8 @@ static int controlleurMessageBroadcast(const client **listeClients, const client
   return 0;
 }
 
-static int controlleurAttributionPseudo(const client **listeClients, client *clientCourant, AttributionPseudo pseudo) {
+static int controlleurAttributionPseudo(const client **listeClients, client *clientCourant,
+                                        AttributionPseudo pseudo) {
   if (pseudoExiste(listeClients, pseudo.pseudo)) {
     envoyerMessageAlerte(clientCourant, "Ce pseudonyme est déjà utilisé.", AVERTISSEMENT);
     return -1;
@@ -56,12 +66,14 @@ static int controlleurMessagePrive(const client **listeClients, const client *cl
                                    MessagePrive messagePrive) {
   printf("Destinataire : %s\n", messagePrive.destinataire);
   if (strcmp(messagePrive.destinataire, clientCourant->nom) == 0) {
-    envoyerMessageAlerte(clientCourant, "Vous ne pouvez pas vous envoyer un message privé.", AVERTISSEMENT);
+    envoyerMessageAlerte(clientCourant, "Vous ne pouvez pas vous envoyer un message privé.",
+                         AVERTISSEMENT);
     return -1;
   }
 
   if (strlen(messagePrive.message) == 0) {
-    envoyerMessageAlerte(clientCourant, "Vous ne pouvez pas envoyer un message vide.", AVERTISSEMENT);
+    envoyerMessageAlerte(clientCourant, "Vous ne pouvez pas envoyer un message vide.",
+                         AVERTISSEMENT);
     return -1;
   }
 
@@ -78,13 +90,20 @@ static int controlleurMessagePrive(const client **listeClients, const client *cl
   return -1;
 }
 
+int controlleurFichier(const InformationsFichier informationsFichier) {
+  printf("%s : %ld\n", informationsFichier.nomFichier, informationsFichier.tailleFichier);
+
+  return 0;
+}
+
 /**
  * @brief Envoie un message à tous les clients connectés, sauf le client courant.
  * @param messageFormate Pointeur vers le message à envoyer (peut être de n'importe quel type).
  * @return int Retourne 0 si le message est envoyé avec succès, -1 en cas d'erreur
  * d'envoi.
  */
-static int broadcast(const client **listeClients, const client *clientCourant, const void *message) {
+static int broadcast(const client **listeClients, const client *clientCourant,
+                     const void *message) {
   for (int i = 0; i < NB_CLIENTS_MAX; i++) {
     if (listeClients[i] != NULL && listeClients[i] != clientCourant) {
       if (send(listeClients[i]->socket, message, TAILLE_MESSAGE_TCP, 0) < 0)

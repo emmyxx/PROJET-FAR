@@ -367,9 +367,7 @@ struct dirent *recupererTableauFichiers(size_t *taille, const char *cheminDossie
     (*taille)++;
   }
 
-  if (closedir(dossier) == -1)
-    perror("Erreur lors de la fermeture du dossier");
-
+  closedir(dossier);
   return informationsFichiers;
 }
 
@@ -380,13 +378,18 @@ struct dirent *recupererTableauFichiers(size_t *taille, const char *cheminDossie
 void *threadEnvoiFichier(void *arg) {
   const argsThreadFichier argsThread = *(argsThreadFichier *)arg;
   const int socketServeur = argsThread.socketServeur;
-  const InformationsFichier informationsFichier = argsThread.informationsFichier; 
+  const InformationsFichier informationsFichier = argsThread.informationsFichier;
   char cheminFichier[PATH_MAX];
-  struct stat statsFichier;
+  // struct stat statsFichier;
 
   // Récupération du chemin du fichier
   strcpy(cheminFichier, CHEMIN_DOSSIER_FICHIERS_LOCAUX);
   strcat(cheminFichier, informationsFichier.nomFichier);
+
+  if (send(socketServeur, &informationsFichier, TAILLE_MESSAGE_TCP, 0) < 0) {
+    printf("⚠️  \033[31mErreur lors de l'envoi du message: %s\033[0m\n", strerror(errno));
+    pthread_exit(NULL);
+  }
 
   // if (stat(cheminFichier, &statsFichier) == -1) {
   //   perror("Echec lors de la récupération des informations du fichier)");
@@ -394,9 +397,7 @@ void *threadEnvoiFichier(void *arg) {
   //   return NULL;
   // }
 
-  printf("%s\n", cheminFichier);
-
-  return NULL;
+  pthread_exit(NULL);
 }
 
 void *threadReceptionFichier(void *arg);

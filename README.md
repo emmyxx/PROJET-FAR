@@ -12,7 +12,8 @@
 
 ### Sprint 3
 - Création répertoire de fichiers clients ✅
-- Les clients peuvent choisir à travers le CLI un fichier a envoyer au serveur à partir d'un dossier local
+- Les clients peuvent choisir à travers le CLI un fichier a envoyer au serveur à partir d'un dossier local ✅
+- Les clients peuvent choisir à travers le CLI un fichier à recevoir à partir d'un dossier dans le serveur
 - Thread d'envoi : Les clients envoient nom + taille du fichier au serveur + envoie fichier partie par partie
 - Thread reception : Les client recoivent un fichier du serveur
 - Thread reception : Le serveur reçoit le fichier du client
