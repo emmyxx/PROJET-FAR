@@ -103,7 +103,7 @@ static int controlleurMessagePrive(const client **listeClients, const client *cl
 
 int controlleurMorceauFichier(const MorceauFichier morceauFichier) {
   const char *nomFichier = morceauFichier.nomFichier;
-  size_t tailleFichier = morceauFichier.tailleFichier;
+  size_t tailleMorceau = morceauFichier.tailleMorceau;
   FILE *fichier;
 
   char cheminFichier[PATH_MAX];
@@ -115,11 +115,11 @@ int controlleurMorceauFichier(const MorceauFichier morceauFichier) {
     return -1;
   }
 
-  size_t octetsEcrits = fwrite(morceauFichier.donnees, 1, tailleFichier, fichier);
+  size_t octetsEcrits = fwrite(morceauFichier.donnees, 1, tailleMorceau, fichier);
 
   printf("octetsEcrits : %ld\n", octetsEcrits);
 
-  if (octetsEcrits != tailleFichier) {
+  if (octetsEcrits != tailleMorceau) {
     fprintf(stderr, "Erreur lors de l'écriture dans le fichier\n");
     fclose(fichier);
     return -1;

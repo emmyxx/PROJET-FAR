@@ -83,8 +83,6 @@ static MessagePrive *formaterEnMessagePrive(char *saisieClient) {
 static MorceauFichier *formaterEnMorceauFichier(char *saisieClient) {
   size_t nombreFichiers = 0;
   struct dirent *tableauFichiers;
-  struct stat statsFichier;
-  char cheminFichier[PATH_MAX];
 
   const char *numeroFichierChaine = strtok(saisieClient, " ");
   if (numeroFichierChaine == NULL) {
@@ -106,21 +104,9 @@ static MorceauFichier *formaterEnMorceauFichier(char *saisieClient) {
   // Récupération du fichier corresondant au numéro donné par le client
   const struct dirent fichierSelectionne = tableauFichiers[numeroFichierInt];
 
-  // Récupération du chemin du fichier
-  strcpy(cheminFichier, CHEMIN_DOSSIER_FICHIERS_LOCAUX);
-  strcat(cheminFichier, fichierSelectionne.d_name);
-
-  if (stat(cheminFichier, &statsFichier) == -1) {
-    perror("Echec lors de la récupération des informations du fichier");
-    errno = EINVAL;
-    free(tableauFichiers);
-    return NULL;
-  }
-
   MorceauFichier *morceauFichier = (MorceauFichier *)malloc(sizeof(MorceauFichier));
   morceauFichier->typeMessage = MORCEAU_FICHIER;
   strcpy(morceauFichier->nomFichier, fichierSelectionne.d_name);
-  morceauFichier->tailleFichier = statsFichier.st_size;
   morceauFichier->estDernierMorceau = false;
 
   free(tableauFichiers);

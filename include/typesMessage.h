@@ -46,7 +46,7 @@ typedef struct {
 
 typedef struct {
   TypeMessage typeMessage;
-  size_t tailleFichier;
+  size_t tailleMorceau;
   char nomFichier[NAME_MAX];
   char donnees[TAILLE_MORCEAU_FICHIER];
   bool estDernierMorceau;

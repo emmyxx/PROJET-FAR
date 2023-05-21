@@ -399,7 +399,7 @@ void *threadEnvoiFichier(void *arg) {
 }
 
 int envoyerFichier(FILE *pointeurFichier, int socketServeur, MorceauFichier morceauFichier) {
-  size_t tailleFichier = 0;
+  size_t tailleMorceau = 0;
 
   while (true) {
     // Vide le buffer car si fread ne lit pas TAILLE_MORCEAU_FICHIER,
@@ -409,7 +409,7 @@ int envoyerFichier(FILE *pointeurFichier, int socketServeur, MorceauFichier morc
     size_t octetsLus = fread(morceauFichier.donnees, 1, TAILLE_MORCEAU_FICHIER, pointeurFichier);
 
     if (octetsLus > 0) {
-      morceauFichier.tailleFichier = octetsLus;
+      morceauFichier.tailleMorceau = octetsLus;
 
       if (feof(pointeurFichier)) {
         morceauFichier.estDernierMorceau = true;
@@ -421,7 +421,7 @@ int envoyerFichier(FILE *pointeurFichier, int socketServeur, MorceauFichier morc
       }
     }
 
-    tailleFichier += octetsLus;
+    tailleMorceau += octetsLus;
 
     // Permet de savoir si fread n'a pas réussi à lire TAILLE_MORCEAU_FICHIER
     if (octetsLus < TAILLE_MORCEAU_FICHIER) {
@@ -439,7 +439,7 @@ int envoyerFichier(FILE *pointeurFichier, int socketServeur, MorceauFichier morc
     }
   }
 
-  printf("Envoi du fichier terminé. Taille du fichier: %ld octets\n", tailleFichier);
+  printf("Envoi du fichier terminé. Taille du fichier: %ld octets\n", tailleMorceau);
 
   return 0;
 }
