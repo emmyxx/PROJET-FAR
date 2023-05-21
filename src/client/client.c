@@ -15,10 +15,8 @@ int main(int argc, char *argv[]) {
   signal(SIGINT, gestionnaireSignal);
 
   // Se connecte au serveur
-  const char *ipServeur = argv[1];
-  const int portServeur = atoi(argv[2]);
-  char *pseudo = argv[3];
-  int socketServeur = creerConnexionServeur(ipServeur, portServeur);
+  char *pseudo = argv[1];
+  int socketServeur = creerConnexionServeur(IP_SERVEUR, PORT_MESSAGES);
 
   if (strlen(pseudo) > TAILLE_PSEUDO) {
     afficherMessageAlerte("Erreur : le pseudo est trop long.\n", ERREUR);
@@ -50,7 +48,7 @@ void gestionnaireArguments(int argc, char *argv[]) {
   if (argc != NB_ARGS_ATTENDUS) {
     fprintf(stderr, "Erreur : %d arguments attendus, mais %d ont été fournis.\n", NB_ARGS_ATTENDUS,
             argc);
-    fprintf(stderr, "Utilisation : %s <adresse_ip> <port> <pseudo>\n", argv[0]);
+    fprintf(stderr, "Utilisation : %s <pseudo>\n", argv[0]);
     exit(EXIT_FAILURE);
   }
 }
@@ -380,7 +378,7 @@ void *threadEnvoiFichier(void *arg) {
   const int socketServeur = argsThread.socketServeur;
   const InformationsFichier informationsFichier = argsThread.informationsFichier;
   char cheminFichier[PATH_MAX];
-  // struct stat statsFichier;
+  FILE *pointeurFichier;
 
   // Récupération du chemin du fichier
   strcpy(cheminFichier, CHEMIN_DOSSIER_FICHIERS_LOCAUX);
@@ -391,13 +389,29 @@ void *threadEnvoiFichier(void *arg) {
     pthread_exit(NULL);
   }
 
-  // if (stat(cheminFichier, &statsFichier) == -1) {
-  //   perror("Echec lors de la récupération des informations du fichier)");
-  //   errno = EINVAL;
-  //   return NULL;
-  // }
+  pointeurFichier = fopen(cheminFichier, "r");
+  if (pointeurFichier == NULL) {
+    perror("Erreur lors de la lecture du fichier");
+    pthread_exit(NULL);
+  }
+
+  envoyerFichier(pointeurFichier, socketServeur);
 
   pthread_exit(NULL);
+}
+
+int envoyerFichier(FILE *pointeurFichier, int socketServeur) {
+  MorceauFichier morceauFichier;
+  morceauFichier.typeMessage = MORCEAU_FICHIER;
+
+  while (fgets(morceauFichier.donnees, TAILLE_MORCEAU_FICHIER, pointeurFichier) != NULL) {
+    if (send(socketServeur, &morceauFichier, TAILLE_MORCEAU_FICHIER, 0) == -1) {
+      perror("Erreur lors de l'envoi du fichier");
+      return -1;
+    }
+  }
+
+  return 0;
 }
 
 void *threadReceptionFichier(void *arg);

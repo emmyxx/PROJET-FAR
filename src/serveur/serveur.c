@@ -6,11 +6,8 @@
 
 pthread_mutex_t clients_mutex;
 
-int main(int argc, char *argv[]) {
-  gestionnaireArguments(argc, argv);
-  const int port = atoi(argv[1]);
-
-  const int socketEcoute = creersocketEcoute(port);
+int main() {
+  const int socketEcoute = creersocketEcoute(PORT_MESSAGES);
   if (socketEcoute < 0) {
     perror("Erreur de création du socket écouteur");
     exit(EXIT_FAILURE);
@@ -48,6 +45,7 @@ int main(int argc, char *argv[]) {
 
       pthread_t threadClient;
       pthread_create(&threadClient, NULL, threadTraitementMessagesClient, args);
+      pthread_detach(threadClient);
     }
   }
 
@@ -64,14 +62,6 @@ int accepterClient(const int socketEcoute) {
   socklen_t longueurAdrClient = sizeof(struct sockaddr_in);
   int socketClient = accept(socketEcoute, (struct sockaddr *)&adresseClient, &longueurAdrClient);
   return socketClient < 0 ? -1 : socketClient;
-}
-
-void gestionnaireArguments(int argc, char *argv[]) {
-  if (argc != NB_ARGS_ATTENDUS) {
-    fprintf(stderr, "Erreur : %d arguments attendus, mais %d ont été fournis.\n", NB_ARGS_ATTENDUS, argc);
-    fprintf(stderr, "Utilisation : %s <port>\n", argv[0]);
-    exit(EXIT_FAILURE);
-  }
 }
 
 int creersocketEcoute(int port) {
@@ -104,7 +94,8 @@ void *threadTraitementMessagesClient(void *arg) {
   // Attribution du pseudonyme
   reponse = recv(clientCourant->socket, message, TAILLE_MESSAGE_TCP, 0);
   if (reponse < 0)
-    envoyerMessageAlerte(clientCourant, "Erreur serveur lors de la réception du pseudonyme.", ERREUR);
+    envoyerMessageAlerte(clientCourant, "Erreur serveur lors de la réception du pseudonyme.",
+                         ERREUR);
   else if (reponse == 0)
     clientCourant->estConnecte = false;
   else
@@ -112,9 +103,11 @@ void *threadTraitementMessagesClient(void *arg) {
 
   while (clientCourant->estConnecte) {
     reponse = recv(clientCourant->socket, message, TAILLE_MESSAGE_TCP, 0);
-    if (reponse < 0)
-      gestionnaireErreur("Erreur de réception du message"); // FIXME ne pas faire crasher le
-                                                            // programme
+
+    if (reponse < 0) {
+      perror("Erreur de réception du message");
+      break;
+    }
 
     if (reponse == 0) {
       clientCourant->estConnecte = false;
@@ -131,14 +124,14 @@ void *threadTraitementMessagesClient(void *arg) {
   supprimerClient(args->clients, args->client);
   pthread_mutex_unlock(&clients_mutex);
 
-  // TODO tuer le thread zombie
   pthread_exit(NULL);
 }
 
 int recevoirPseudo(const client **listeClients, client *clientCourant, void *message) {
   const TypeMessage typeMessage = *(TypeMessage *)message;
   if (typeMessage != PSEUDO) {
-    envoyerMessageAlerte(clientCourant, "Le message TCP d'attritution du pseudonyme est mal formaté.", ERREUR);
+    envoyerMessageAlerte(clientCourant,
+                         "Le message TCP d'attritution du pseudonyme est mal formaté.", ERREUR);
     clientCourant->estConnecte = false;
     return -1;
   }

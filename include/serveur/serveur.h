@@ -1,7 +1,6 @@
 #ifndef SERVEUR_H
 #define SERVEUR_H
 
-#define NB_ARGS_ATTENDUS 2
 #define NB_CLIENTS_EN_ATTENTE 8
 #define NB_CLIENTS_MAX 3
 
@@ -41,11 +40,5 @@ void *threadTraitementMessagesClient(void *arg);
  * @note Déconnecte le client si le pseudo est déjà utilisé.
  */
 int recevoirPseudo(const client **listeClients, client *clientCourant, void *message);
-
-/* -------------------------------------------------------------------------- */
-/*                       Réception et envoi des fichiers                      */
-/* -------------------------------------------------------------------------- */
-void *threadEnvoiFichier(void *arg);
-void *threadReceptionFichier(void *arg);
 
 #endif

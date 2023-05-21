@@ -3,12 +3,14 @@
 
 #include "../typesMessage.h"
 
-#define NB_ARGS_ATTENDUS 4
+#define NB_ARGS_ATTENDUS 2
 #define CHEMIN_DOSSIER_FICHIERS_LOCAUX "./repertoire_client/"
+#define IP_SERVEUR "127.0.0.1"
 
 /* -------------------------------------------------------------------------- */
 /*                           Divers                                           */
 /* -------------------------------------------------------------------------- */
+void gestionnaireArguments(int argc, char *argv[]);
 int creerConnexionServeur(const char *ipServeur, const int portServeur);
 void gestionnaireSignal(int signum);
 void arreterCommunication();
@@ -42,6 +44,8 @@ struct dirent *recupererTableauFichiers(size_t *taille, const char *cheminDossie
  * @return 0 si l'affichage s'est bien passé, -1 si une erreur s'est produite.
  */
 int afficherFichiers(const char *cheminDossier);
+
+int envoyerFichier(FILE *pointeurFichier, int socketServeur);
 
 /* -------------------------------------------------------------------------- */
 /*                    Réception et traitement des messages                    */
