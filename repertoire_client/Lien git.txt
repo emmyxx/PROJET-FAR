@@ -1,2 +1,0 @@
-https://github.com/emmyxx/PROJET-FAR
-Commit "fix: recevoirPseudo n'est plus static" - 8af4462
