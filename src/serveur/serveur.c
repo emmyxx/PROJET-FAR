@@ -1,10 +1,13 @@
-#include "../include/serveur/serveur.h"
+#include "semaphore.h"
+
 #include "../include/common.h"
 #include "../include/constantes.h"
 #include "../include/serveur/gestionnaireClients.h"
 #include "../include/serveur/routageMessageRecu.h"
+#include "../include/serveur/serveur.h"
 
 pthread_mutex_t clients_mutex;
+sem_t connection_semaphore;
 
 int main() {
   const int socketEcoute = creersocketEcoute(PORT_MESSAGES);
@@ -16,41 +19,45 @@ int main() {
   client **clients = creerTableauClients(NB_CLIENTS_MAX);
 
   pthread_mutex_init(&clients_mutex, NULL);
+  sem_init(&connection_semaphore, 0, NB_CLIENTS_MAX);
 
   puts("Serveur démarré");
 
   while (true) {
     // Accepte des clients tant que l'on n'a pas atteint la limite
-    if (avoirNombreClientsConnectes((const client **)clients) < NB_CLIENTS_MAX) {
-      client *nouveauClient = (client *)malloc(sizeof(client));
-
-      // Attend qu'un client se connecte
-      nouveauClient->socket = accepterClient(socketEcoute);
-
-      if (nouveauClient->socket < 0) {
-        perror("Erreur d'acceptation d'un client");
-        break;
-      }
-
-      nouveauClient->estConnecte = true;
-
-      // TODO free ce malloc
-      argsThread *args = (argsThread *)malloc(sizeof(argsThread));
-      args->client = nouveauClient;
-      args->clients = clients;
-
-      pthread_mutex_lock(&clients_mutex);
-      ajouterClient(clients, nouveauClient);
-      pthread_mutex_unlock(&clients_mutex);
-
-      pthread_t threadClient;
-      pthread_create(&threadClient, NULL, threadTraitementMessagesClient, args);
-      pthread_detach(threadClient);
+    if (sem_wait(&connection_semaphore) != 0) {
+      perror("Erreur lors de l'attente du semaphore");
+      break;
     }
+
+    client *nouveauClient = (client *)malloc(sizeof(client));
+
+    // Attend qu'un client se connecte
+    nouveauClient->socket = accepterClient(socketEcoute);
+
+    if (nouveauClient->socket < 0) {
+      perror("Erreur d'acceptation d'un client");
+      break;
+    }
+
+    nouveauClient->estConnecte = true;
+
+    // TODO free ce malloc
+    argsThread *args = (argsThread *)malloc(sizeof(argsThread));
+    args->client = nouveauClient;
+    args->clients = clients;
+
+    pthread_mutex_lock(&clients_mutex);
+    ajouterClient(clients, nouveauClient);
+    pthread_mutex_unlock(&clients_mutex);
+
+    pthread_t threadClient;
+    pthread_create(&threadClient, NULL, threadTraitementMessagesClient, args);
+    pthread_detach(threadClient);
   }
 
   pthread_mutex_destroy(&clients_mutex);
-
+  sem_destroy(&connection_semaphore);
   free(clients);
   close(socketEcoute);
   printf("Fin du programme\n");
@@ -93,13 +100,15 @@ void *threadTraitementMessagesClient(void *arg) {
 
   // Attribution du pseudonyme
   reponse = recv(clientCourant->socket, message, TAILLE_MESSAGE_TCP, 0);
-  if (reponse < 0)
+
+  if (reponse < 0 || reponse == 0) {
     envoyerMessageAlerte(clientCourant, "Erreur serveur lors de la réception du pseudonyme.",
                          ERREUR);
-  else if (reponse == 0)
     clientCourant->estConnecte = false;
-  else
-    recevoirPseudo((const client **)listeClients, clientCourant, message);
+  }
+
+  if (recevoirPseudo((const client **)listeClients, clientCourant, message) == -1)
+    clientCourant->estConnecte = false;
 
   while (clientCourant->estConnecte) {
     reponse = recv(clientCourant->socket, message, TAILLE_MESSAGE_TCP, 0);
@@ -123,6 +132,8 @@ void *threadTraitementMessagesClient(void *arg) {
   pthread_mutex_lock(&clients_mutex);
   supprimerClient(args->clients, args->client);
   pthread_mutex_unlock(&clients_mutex);
+
+  sem_post(&connection_semaphore);
 
   pthread_exit(NULL);
 }

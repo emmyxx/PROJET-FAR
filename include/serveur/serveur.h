@@ -5,7 +5,7 @@
 #include "gestionnaireClients.h"
 
 #define NB_CLIENTS_EN_ATTENTE 8
-#define NB_CLIENTS_MAX 3
+#define NB_CLIENTS_MAX 10
 #define CHEMIN_DOSSIER_FICHIERS_SERVEUR "./repertoire_serveur/"
 
 typedef struct argsThread {
