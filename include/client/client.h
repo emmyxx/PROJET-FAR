@@ -79,5 +79,11 @@ void nettoyerBufferEntree();
 /*                       Réception et envoi des fichiers                      */
 /* -------------------------------------------------------------------------- */
 
+typedef struct {
+  int socketServeur;
+  Fichier fichier;
+} argsThreadEnvoiFichier;
+
 void *threadEnvoiFichier(void *arg);
+void *threadEnvoiFichier2(void *arg);
 void *threadReceptionFichier(void *arg);

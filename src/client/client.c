@@ -251,7 +251,7 @@ int routageEnvoiMessage(const char *saisie, const int socketServeur) {
   }
 
   // Afficher les fichiers locaux
-  else if (strcmp(nomCommande, "/afl") == 0) {
+  else if (strcmp(nomCommande, "/liste") == 0) {
     if (afficherFichiers(CHEMIN_DOSSIER_FICHIERS_LOCAUX) == -1)
       return -1;
 
@@ -275,6 +275,17 @@ int routageEnvoiMessage(const char *saisie, const int socketServeur) {
 
     if (pthread_create(&idthreadEnvoiFichier, NULL, threadEnvoiFichier, &args) != 0)
       gestionnaireErreur("Erreur lors de la création du thread d'envoi de fichier");
+
+    // Libère les ressources du thread dès qu'il a fini son exécution
+    pthread_detach(idthreadEnvoiFichier);
+  }
+
+  if (*(TypeMessage *)messageFormate == FICHIER) {
+    argsThreadEnvoiFichier args = {socketServeur, *((Fichier *)messageFormate)};
+    pthread_t idthreadEnvoiFichier;
+
+    if (pthread_create(&idthreadEnvoiFichier, NULL, threadEnvoiFichier2, &args) != 0)
+      gestionnaireErreur("Erreur lors de la création du thread de réception de fichier");
 
     // Libère les ressources du thread dès qu'il a fini son exécution
     pthread_detach(idthreadEnvoiFichier);
@@ -396,6 +407,65 @@ void *threadEnvoiFichier(void *arg) {
 
   fclose(pointeurFichier);
   pthread_exit(NULL);
+}
+
+void *threadEnvoiFichier2(void *arg) {
+  const argsThreadEnvoiFichier argsThread = *(argsThreadEnvoiFichier *)arg;
+  const int socketServeur = argsThread.socketServeur;
+  const Fichier fichier = argsThread.fichier;
+  char cheminFichier[PATH_MAX];
+  FILE *pointeurFichier;
+  char buffer[TAILLE_MORCEAU_FICHIER];
+  int octetsLus;
+
+  // Récupération du chemin du fichier
+  strcpy(cheminFichier, CHEMIN_DOSSIER_FICHIERS_LOCAUX);
+  strcat(cheminFichier, fichier.nomFichier);
+
+  pointeurFichier = fopen(cheminFichier, "r");
+  if (pointeurFichier == NULL) {
+    perror("Erreur lors de l'ouverture du fichier");
+    fclose(pointeurFichier);
+    pthread_exit(NULL);
+  }
+
+  // Envoi du nom du fichier
+  if (send(socketServeur, &fichier, sizeof(Fichier), 0) == -1) {
+    perror("Erreur lors de l'envoi du nom fichier");
+    fclose(pointeurFichier);
+    pthread_exit(NULL);
+  }
+
+  // Envoi du fichier
+  while (true) {
+    // Vide le buffer car si fread ne lit pas TAILLE_MORCEAU_FICHIER en entier,
+    // il va garder les anciennes données dans le buffer.
+    memset(buffer, 0, TAILLE_MORCEAU_FICHIER);
+
+    octetsLus = fread(buffer, 1, TAILLE_MORCEAU_FICHIER, pointeurFichier);
+
+    if (octetsLus > 0) {
+      if (send(socketServeur, buffer, octetsLus, 0) == -1) {
+        perror("Erreur lors de l'envoi du fichier");
+        fclose(pointeurFichier);
+        pthread_exit(NULL);
+      }
+    }
+
+    else if (feof(pointeurFichier)) {
+      break;
+    }
+
+    else {
+      perror("Erreur lors de la lecture du fichier");
+      fclose(pointeurFichier);
+      pthread_exit(NULL);
+    }
+  }
+
+  printf("Envoi de %s terminé.\n", fichier.nomFichier);
+  fclose(pointeurFichier);
+  return NULL;
 }
 
 int envoyerFichier(FILE *pointeurFichier, int socketServeur, MorceauFichier morceauFichier) {

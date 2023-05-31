@@ -17,7 +17,8 @@ typedef enum {
   MESSAGE_PRIVE,
   PSEUDO,
   MESSAGE_ALERTE,
-  MORCEAU_FICHIER
+  MORCEAU_FICHIER,
+  FICHIER,
 } TypeMessage;
 
 typedef struct {
@@ -51,5 +52,11 @@ typedef struct {
   char donnees[TAILLE_MORCEAU_FICHIER];
   bool estDernierMorceau;
 } MorceauFichier;
+
+typedef struct {
+  TypeMessage typeMessage;
+  char nomFichier[NAME_MAX];
+  size_t tailleFichier;
+} Fichier;
 
 #endif

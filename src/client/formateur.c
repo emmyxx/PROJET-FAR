@@ -11,6 +11,8 @@ static MessageBroadcast *formaterEnBroadcast(const char *saisieClient);
 static AttributionPseudo *formaterEnAttributionPseudo(char *saisieClient);
 static MessagePrive *formaterEnMessagePrive(char *saisieClient);
 static MorceauFichier *formaterEnMorceauFichier(char *saisieClient);
+static Fichier *formaterEnFichier(char *saisieClient);
+int recupererTailleFichier(const char *nomFichier);
 
 void *formater(const char *saisie) {
   // Fait une copie de saisie pour ne pas modifier l'originale
@@ -34,6 +36,9 @@ void *formater(const char *saisie) {
 
   if (strcmp(nomCommande, "/efl") == 0)
     return formaterEnMorceauFichier(saisieSansCommande);
+
+  if (strcmp(nomCommande, "/envoyer") == 0)
+    return formaterEnFichier(saisieSansCommande);
 
   errno = EINVAL;
   return NULL;
@@ -111,4 +116,58 @@ static MorceauFichier *formaterEnMorceauFichier(char *saisieClient) {
 
   free(tableauFichiers);
   return morceauFichier;
+}
+
+static Fichier *formaterEnFichier(char *saisieClient) {
+  size_t nombreFichiers = 0;
+  struct dirent *tableauFichiers;
+
+  const char *numeroFichierChaine = strtok(saisieClient, " ");
+  if (numeroFichierChaine == NULL) {
+    perror("Erreur strtok");
+    return NULL;
+  }
+
+  const int numeroFichierInt = atoi(numeroFichierChaine) - 1;
+
+  tableauFichiers = recupererTableauFichiers(&nombreFichiers, CHEMIN_DOSSIER_FICHIERS_LOCAUX);
+
+  if (tableauFichiers == NULL || nombreFichiers == 0 || numeroFichierInt < 0 ||
+      numeroFichierInt >= (int)nombreFichiers) {
+    errno = EINVAL;
+    free(tableauFichiers);
+    return NULL;
+  }
+
+  // Récupération du fichier corresondant au numéro donné par le client
+  const struct dirent fichierSelectionne = tableauFichiers[numeroFichierInt];
+
+  Fichier *fichier = (Fichier *)malloc(sizeof(Fichier));
+  fichier->typeMessage = FICHIER;
+  strcpy(fichier->nomFichier, fichierSelectionne.d_name);
+  const int tailleFichier = recupererTailleFichier(fichierSelectionne.d_name);
+
+  if (tailleFichier == -1) {
+    perror("Erreur récupération taille fichier");
+    free(tableauFichiers);
+    return NULL;
+  }
+
+  fichier->tailleFichier = tailleFichier;
+
+  free(tableauFichiers);
+  return fichier;
+}
+
+int recupererTailleFichier(const char *nomFichier) {
+  char cheminFichier[PATH_MAX];
+  strcpy(cheminFichier, CHEMIN_DOSSIER_FICHIERS_LOCAUX);
+  strcat(cheminFichier, nomFichier);
+
+  struct stat st;
+  if (stat(cheminFichier, &st) != 0) {
+    perror("Erreur stat");
+    return -1;
+  }
+  return st.st_size;
 }

@@ -21,6 +21,8 @@
 
 #define PORT_MESSAGES 1111
 
+#define PORT_FICHIERS 2222
+
 // Les différents niveaux d'importance des messages des messages
 // d'alerte envoyés par le serveur.
 typedef enum {
