@@ -11,7 +11,7 @@
 /*                           Divers                                           */
 /* -------------------------------------------------------------------------- */
 void gestionnaireArguments(int argc, char *argv[]);
-int creerConnexionServeur(const char *ipServeur, const int portServeur);
+int etablirConnexionTCP(const char *ipDistante, const int portDistant);
 void gestionnaireSignal(int signum);
 void arreterCommunication();
 int afficherManuel();

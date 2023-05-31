@@ -19,7 +19,6 @@ static int controlleurAttributionPseudo(const client **listeClients, client *cli
                                         AttributionPseudo pseudo);
 static int controlleurMessagePrive(const client **listeClients, const client *clientCourant,
                                    MessagePrive messagePrive);
-static int controlleurFichier(const client *clientCourant, const Fichier fichier);
 
 /* -------------------------------------------------------------------------- */
 /*                                   Divers                                   */
@@ -44,11 +43,6 @@ int routageMessageRecu(client **listeClients, client *clientCourant, void *messa
     MessagePrive messagePrive = *(MessagePrive *)message;
     return controlleurMessagePrive((const client **)listeClients, (const client *)clientCourant,
                                    messagePrive);
-  }
-
-  if (typeMessage == FICHIER) {
-    const Fichier fichier = *(Fichier *)message;
-    return controlleurFichier((const client *)clientCourant, fichier);
   }
 
   return -1;
@@ -99,52 +93,6 @@ static int controlleurMessagePrive(const client **listeClients, const client *cl
 
   envoyerMessageAlerte(clientCourant, "Ce client n'existe pas.", AVERTISSEMENT);
   return -1;
-}
-
-static int controlleurFichier(const client *clientCourant, const Fichier fichierClient) {
-  char cheminFichier[PATH_MAX];
-  FILE *fichierLocal;
-  char buffer[TAILLE_MORCEAU_FICHIER];
-  size_t octetsLus = 0;
-  size_t octetsRecus = 0;
-
-  // Réception du fichier
-  strcpy(cheminFichier, CHEMIN_DOSSIER_FICHIERS_SERVEUR);
-  strcat(cheminFichier, fichierClient.nomFichier);
-
-  fichierLocal = fopen(cheminFichier, "w");
-  if (fichierLocal == NULL) {
-    perror("Erreur lors de l'ouverture du fichier");
-    return -1;
-  }
-
-  while (octetsRecus < fichierClient.tailleFichier) {
-    // Vide le buffer car si fread ne lit pas TAILLE_MORCEAU_FICHIER en entier,
-    // il va garder les anciennes données dans le buffer.
-    memset(buffer, 0, TAILLE_MORCEAU_FICHIER);
-
-    octetsLus = recv(clientCourant->socket, buffer, TAILLE_MORCEAU_FICHIER, 0);
-    if (octetsLus == 0) { // Le client s'est déconnecté
-      puts("Le client s'est déconnecté avant la fin de la réception du fichier.");
-      fclose(fichierLocal);
-      remove(cheminFichier);
-      return -1;
-    } else if (octetsLus == 0) {
-      perror("Erreur lors de la réception du fichier");
-      fclose(fichierLocal);
-      remove(cheminFichier);
-      return -1;
-    }
-
-    fwrite(buffer, 1, octetsLus, fichierLocal);
-    octetsRecus += octetsLus;
-  }
-
-  fclose(fichierLocal);
-
-  printf("Réception de \"%s\" (%ld octets) terminée.\n", fichierClient.nomFichier,
-         fichierClient.tailleFichier);
-  return 0;
 }
 
 /**

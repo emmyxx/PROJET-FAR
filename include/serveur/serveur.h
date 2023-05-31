@@ -4,8 +4,8 @@
 #include "../typesMessage.h"
 #include "gestionnaireClients.h"
 
-#define NB_CLIENTS_EN_ATTENTE 8
-#define NB_CLIENTS_MAX 10
+#define NB_CLIENTS_EN_ATTENTE 100
+#define NB_CLIENTS_MAX 100
 #define CHEMIN_DOSSIER_FICHIERS_SERVEUR "./repertoire_serveur/"
 
 typedef struct argsThread {
@@ -19,7 +19,7 @@ typedef struct argsThread {
  * @return int Le descripteur de la socket d'écoute si la création est réussie,
  * -1 en cas d'échec.
  */
-int creersocketEcoute(int port);
+int creerSocketEcoute(int port);
 
 /**
  * @brief Accepte une connexion client entrante sur la socket d'écoute.
@@ -41,5 +41,12 @@ void *threadTraitementMessagesClient(void *arg);
  * @note Déconnecte le client si le pseudo est déjà utilisé.
  */
 int recevoirPseudo(const client **listeClients, client *clientCourant, void *message);
+
+void *gestionnaireThreadMessage();
+void *gestionnaireThreadFichier();
+
+void *threadTraitementFichiersClient(void *arg);
+
+int controlleurFichier(const int socketClient, const Fichier fichierClient);
 
 #endif

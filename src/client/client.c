@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
 
   // Se connecte au serveur
   char *pseudo = argv[1];
-  int socketServeur = creerConnexionServeur(IP_SERVEUR, PORT_MESSAGES);
+  int socketServeur = etablirConnexionTCP(IP_SERVEUR, PORT_MESSAGES);
 
   if (strlen(pseudo) > TAILLE_PSEUDO) {
     afficherMessageAlerte("Erreur : le pseudo est trop long.\n", ERREUR);
@@ -53,7 +53,7 @@ void gestionnaireArguments(int argc, char *argv[]) {
   }
 }
 
-int creerConnexionServeur(const char *ipServeur, const int portServeur) {
+int etablirConnexionTCP(const char *ipDistante, const int portDistant) {
   int socketServeur = socket(PF_INET, SOCK_STREAM, 0);
 
   if (socketServeur == -1)
@@ -62,13 +62,15 @@ int creerConnexionServeur(const char *ipServeur, const int portServeur) {
   // Configuration de l'adresse du serveur
   struct sockaddr_in adresseEcouteur;
   adresseEcouteur.sin_family = AF_INET;
-  inet_pton(AF_INET, ipServeur, &(adresseEcouteur.sin_addr));
-  adresseEcouteur.sin_port = htons(portServeur);
+  inet_pton(AF_INET, ipDistante, &(adresseEcouteur.sin_addr));
+  adresseEcouteur.sin_port = htons(portDistant);
   socklen_t longueurAdresse = sizeof(struct sockaddr_in);
 
   // Connexion à la socket serveur
-  if (connect(socketServeur, (struct sockaddr *)&adresseEcouteur, longueurAdresse) == -1)
-    gestionnaireErreur("Erreur de connexion");
+  if (connect(socketServeur, (struct sockaddr *)&adresseEcouteur, longueurAdresse) == -1) {
+    afficherMessageAlerte("Erreur lors de la connexion au serveur.", ERREUR);
+    return -1;
+  }
 
   return socketServeur;
 }
@@ -270,11 +272,17 @@ int routageEnvoiMessage(const char *saisie, const int socketServeur) {
   }
 
   if (*(TypeMessage *)messageFormate == FICHIER) {
-    argsThreadEnvoiFichier args = {socketServeur, *((Fichier *)messageFormate)};
+    const int socketFichier = etablirConnexionTCP(IP_SERVEUR, PORT_FICHIERS);
+    if (socketFichier == -1)
+      return -1;
+
+    argsThreadEnvoiFichier args = {socketFichier, *((Fichier *)messageFormate)};
     pthread_t idthreadEnvoiFichier;
 
-    if (pthread_create(&idthreadEnvoiFichier, NULL, threadEnvoiFichier, &args) != 0)
-      gestionnaireErreur("Erreur lors de la création du thread de réception de fichier");
+    if (pthread_create(&idthreadEnvoiFichier, NULL, threadEnvoiFichier, &args) != 0) {
+      afficherMessageAlerte("Erreur lors de la création du thread d'envoi de fichier.", ERREUR);
+      return -1;
+    }
 
     // Libère les ressources du thread dès qu'il a fini son exécution
     pthread_detach(idthreadEnvoiFichier);
@@ -432,53 +440,8 @@ void *threadEnvoiFichier(void *arg) {
 
   printf("Envoi de %s terminé.\n", fichier.nomFichier);
   fclose(pointeurFichier);
+  close(socketServeur);
   return NULL;
-}
-
-int envoyerFichier(FILE *pointeurFichier, int socketServeur, MorceauFichier morceauFichier) {
-  size_t tailleMorceau = 0;
-
-  while (true) {
-    // Vide le buffer car si fread ne lit pas TAILLE_MORCEAU_FICHIER,
-    // il va garder les anciennes données dans le buffer.
-    memset(morceauFichier.donnees, 0, TAILLE_MORCEAU_FICHIER);
-
-    size_t octetsLus = fread(morceauFichier.donnees, 1, TAILLE_MORCEAU_FICHIER, pointeurFichier);
-
-    if (octetsLus > 0) {
-      morceauFichier.tailleMorceau = octetsLus;
-
-      if (feof(pointeurFichier)) {
-        morceauFichier.estDernierMorceau = true;
-      }
-
-      if (send(socketServeur, &morceauFichier, TAILLE_MESSAGE_TCP, 0) == -1) {
-        perror("Erreur lors de l'envoi du fichier");
-        return -1;
-      }
-    }
-
-    tailleMorceau += octetsLus;
-
-    // Permet de savoir si fread n'a pas réussi à lire TAILLE_MORCEAU_FICHIER
-    if (octetsLus < TAILLE_MORCEAU_FICHIER) {
-      // Si on est à la fin du fichier
-      if (feof(pointeurFichier)) {
-        morceauFichier.estDernierMorceau = true;
-        break;
-      }
-      // Si on a rencontré une erreur
-      else if (ferror(pointeurFichier)) {
-        perror("Erreur lors de la lecture du fichier");
-        clearerr(pointeurFichier); // clear the error flag
-        return -1;
-      }
-    }
-  }
-
-  printf("Envoi du fichier terminé. Taille du fichier: %ld octets\n", tailleMorceau);
-
-  return 0;
 }
 
 void *threadReceptionFichier(void *arg);
