@@ -11,6 +11,7 @@ static MessageBroadcast *formaterEnBroadcast(const char *saisieClient);
 static AttributionPseudo *formaterEnAttributionPseudo(char *saisieClient);
 static MessagePrive *formaterEnMessagePrive(char *saisieClient);
 static Fichier *formaterEnFichier(char *saisieClient);
+static Salon *formaterEnSalon(char *saisieClient);
 int recupererTailleFichier(const char *nomFichier);
 
 void *formater(const char *saisie) {
@@ -35,6 +36,9 @@ void *formater(const char *saisie) {
 
   if (strcmp(nomCommande, "/envoyer") == 0)
     return formaterEnFichier(saisieSansCommande);
+
+  if (strcmp(nomCommande, "/salon") == 0)
+    return formaterEnSalon(saisieSansCommande);
 
   errno = EINVAL;
   return NULL;
@@ -120,6 +124,27 @@ static Fichier *formaterEnFichier(char *saisieClient) {
 
   free(tableauFichiers);
   return fichier;
+}
+
+static Salon *formaterEnSalon(char *saisieClient) {
+  const char *idSalon = strtok(saisieClient, " ");
+  if (idSalon == NULL) {
+    errno = EINVAL;
+    return NULL;
+  }
+
+  const int idSalonInt = atoi(idSalon);
+
+  if (idSalonInt > NB_SALONS_MAX - 1 || idSalonInt < 0) {
+    errno = EINVAL;
+    return NULL;
+  }
+
+  Salon *salon = (Salon *)malloc(sizeof(Salon));
+  salon->typeMessage = SALON;
+  salon->idSalon = idSalonInt;
+
+  return salon;
 }
 
 int recupererTailleFichier(const char *nomFichier) {

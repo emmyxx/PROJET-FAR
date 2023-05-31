@@ -11,6 +11,7 @@
 typedef struct argsThread {
   client *client;
   client **clients;
+  char listeSalons[NB_SALONS_MAX][NB_CLIENTS_MAX];
 } argsThread;
 
 /**

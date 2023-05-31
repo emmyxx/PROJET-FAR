@@ -8,6 +8,7 @@ typedef struct client {
   int socket;
   char nom[TAILLE_PSEUDO];
   bool estConnecte;
+  char nomSalon[TAILLE_NOM_SALON];
 } client;
 
 /**

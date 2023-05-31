@@ -7,8 +7,9 @@
 #define TYPES_MESSAGE_H
 
 #include <limits.h>
-#include <stdio.h>
 #include <stdbool.h>
+#include <stdio.h>
+
 
 #include "constantes.h"
 
@@ -19,12 +20,14 @@ typedef enum {
   MESSAGE_ALERTE,
   MORCEAU_FICHIER,
   FICHIER,
+  SALON
 } TypeMessage;
 
 typedef struct {
   TypeMessage typeMessage;
   char expediteur[TAILLE_PSEUDO];
   char message[TAILLE_SAISIE_CLIENT];
+  char nomSalon[TAILLE_NOM_SALON];
 } MessageBroadcast;
 
 typedef struct {
@@ -58,5 +61,10 @@ typedef struct {
   char nomFichier[NAME_MAX];
   size_t tailleFichier;
 } Fichier;
+
+typedef struct {
+  TypeMessage typeMessage;
+  int idSalon;
+} Salon;
 
 #endif

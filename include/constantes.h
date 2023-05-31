@@ -23,6 +23,10 @@
 
 #define PORT_FICHIERS 2222
 
+#define TAILLE_NOM_SALON 32
+
+#define NB_SALONS_MAX 4 
+
 // Les différents niveaux d'importance des messages des messages
 // d'alerte envoyés par le serveur.
 typedef enum {

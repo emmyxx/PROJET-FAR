@@ -137,7 +137,7 @@ int routageMessageRecu(void *messageRecu) {
 }
 
 int recevoirMessageBroadcast(const MessageBroadcast messageBroadcast) {
-  printf("%s : %s\n", messageBroadcast.expediteur, messageBroadcast.message);
+  printf("%s~ %s : %s\n", messageBroadcast.nomSalon ,messageBroadcast.expediteur, messageBroadcast.message);
   return 0;
 }
 

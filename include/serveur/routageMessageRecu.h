@@ -14,7 +14,8 @@
  * @param message Pointeur vers le message reçu.
  * @return int Retourne 0 si le message est traité avec succès, -1 en cas d'erreur.
  */
-int routageMessageRecu(client **listeClients, client *clientCourant, void *message);
+int routageMessageRecu(client **listeClients, client *clientCourant, void *message,
+                       char **listeSalons);
 
 int envoyerMessageAlerte(const client *clientCourant, char *message, TypeAlerte typeAlerte);
 

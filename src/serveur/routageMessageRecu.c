@@ -19,13 +19,15 @@ static int controlleurAttributionPseudo(const client **listeClients, client *cli
                                         AttributionPseudo pseudo);
 static int controlleurMessagePrive(const client **listeClients, const client *clientCourant,
                                    MessagePrive messagePrive);
+static int controlleurSalon(client *clientCourant, char **listeSalons, Salon salon);
 
 /* -------------------------------------------------------------------------- */
 /*                                   Divers                                   */
 /* -------------------------------------------------------------------------- */
 static int broadcast(const client **listeClients, const client *clientCourant, const void *message);
 
-int routageMessageRecu(client **listeClients, client *clientCourant, void *message) {
+int routageMessageRecu(client **listeClients, client *clientCourant, void *message,
+                       char **listeSalons) {
   const TypeMessage typeMessage = *(TypeMessage *)message;
 
   if (typeMessage == MESSAGE_BROADCAST) {
@@ -45,12 +47,18 @@ int routageMessageRecu(client **listeClients, client *clientCourant, void *messa
                                    messagePrive);
   }
 
+  if (typeMessage == SALON) {
+    Salon salon = *(Salon *)message;
+    return controlleurSalon(clientCourant, listeSalons, salon);
+  }
+
   return -1;
 }
 
 static int controlleurMessageBroadcast(const client **listeClients, const client *clientCourant,
                                        MessageBroadcast messageBroadcast) {
   strcpy(messageBroadcast.expediteur, clientCourant->nom);
+  strcpy(messageBroadcast.nomSalon, clientCourant->nomSalon);
   broadcast(listeClients, clientCourant, &messageBroadcast);
   printf("%s broadcast : \"%s\"\n", clientCourant->nom, messageBroadcast.message);
   return 0;
@@ -93,6 +101,25 @@ static int controlleurMessagePrive(const client **listeClients, const client *cl
 
   envoyerMessageAlerte(clientCourant, "Ce client n'existe pas.", AVERTISSEMENT);
   return -1;
+}
+
+static int controlleurSalon(client *clientCourant, char ** listeSalons, Salon salon) {
+  const int idSalon = salon.idSalon;
+  
+
+  if (strcmp(listeSalons[idSalon], clientCourant->nomSalon) == 0) {
+    envoyerMessageAlerte(clientCourant, "Vous êtes déjà dans ce salon.", AVERTISSEMENT);
+    return -1;
+  }
+
+  if (strlen(listeSalons[idSalon]) == 0) {
+    envoyerMessageAlerte(clientCourant, "Vous ne pouvez pas rejoindre un salon vide.",
+                         AVERTISSEMENT);
+    return -1;
+  }
+
+  strcpy(clientCourant->nomSalon, listeSalons[idSalon]);
+  return 0;
 }
 
 /**

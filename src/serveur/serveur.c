@@ -37,6 +37,16 @@ void *gestionnaireThreadMessage() {
 
   client **clients = creerTableauClients(NB_CLIENTS_MAX);
 
+  char salons[NB_SALONS_MAX][NB_CLIENTS_MAX] = {0};
+
+  // Salons par défaut
+  strcpy(salons[0], "Général");
+
+  // Salons auxiliaires
+  strcpy(salons[1], "Petits secrets");
+  strcpy(salons[2], "Gros secrets");
+  strcpy(salons[3], "Très gros secrets");
+
   pthread_mutex_init(&clients_mutex, NULL);
   sem_init(&connection_semaphore, 0, NB_CLIENTS_MAX);
 
@@ -60,10 +70,13 @@ void *gestionnaireThreadMessage() {
     }
 
     nouveauClient->estConnecte = true;
+    // Les clients sont mis par défaut dans le salon Général
+    strcpy(nouveauClient->nomSalon, salons[0]);
 
     argsThread args;
     args.client = nouveauClient;
     args.clients = clients;
+    strcpy(args.listeSalons, salons);
 
     pthread_mutex_lock(&clients_mutex);
     ajouterClient(clients, nouveauClient);
@@ -140,6 +153,7 @@ void *threadTraitementMessagesClient(void *arg) {
   argsThread *args = (argsThread *)arg;
   client **listeClients = args->clients;
   client *clientCourant = args->client;
+  char **listeSalons = args->listeSalons;
   char message[TAILLE_MESSAGE_TCP];
   int reponse;
 
@@ -168,7 +182,7 @@ void *threadTraitementMessagesClient(void *arg) {
       break;
     }
 
-    routageMessageRecu(listeClients, clientCourant, message);
+    routageMessageRecu(listeClients, clientCourant, message, listeSalons);
   }
 
   printf("%s s'est déconnecté(e).\n", args->client->nom);
