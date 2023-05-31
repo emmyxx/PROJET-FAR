@@ -269,22 +269,11 @@ int routageEnvoiMessage(const char *saisie, const int socketServeur) {
     return -1;
   }
 
-  if (*(TypeMessage *)messageFormate == MORCEAU_FICHIER) {
-    argsThreadFichier args = {socketServeur, *(MorceauFichier *)messageFormate};
-    pthread_t idthreadEnvoiFichier;
-
-    if (pthread_create(&idthreadEnvoiFichier, NULL, threadEnvoiFichier, &args) != 0)
-      gestionnaireErreur("Erreur lors de la création du thread d'envoi de fichier");
-
-    // Libère les ressources du thread dès qu'il a fini son exécution
-    pthread_detach(idthreadEnvoiFichier);
-  }
-
   if (*(TypeMessage *)messageFormate == FICHIER) {
     argsThreadEnvoiFichier args = {socketServeur, *((Fichier *)messageFormate)};
     pthread_t idthreadEnvoiFichier;
 
-    if (pthread_create(&idthreadEnvoiFichier, NULL, threadEnvoiFichier2, &args) != 0)
+    if (pthread_create(&idthreadEnvoiFichier, NULL, threadEnvoiFichier, &args) != 0)
       gestionnaireErreur("Erreur lors de la création du thread de réception de fichier");
 
     // Libère les ressources du thread dès qu'il a fini son exécution
@@ -386,30 +375,8 @@ struct dirent *recupererTableauFichiers(size_t *taille, const char *cheminDossie
 /*                       Réception et envoi des fichiers */
 /* --------------------------------------------------------------------------
  */
+
 void *threadEnvoiFichier(void *arg) {
-  const argsThreadFichier argsThread = *(argsThreadFichier *)arg;
-  const int socketServeur = argsThread.socketServeur;
-  const MorceauFichier morceauFichier = argsThread.morceauFichier;
-  char cheminFichier[PATH_MAX];
-  FILE *pointeurFichier;
-
-  // Récupération du chemin du fichier
-  strcpy(cheminFichier, CHEMIN_DOSSIER_FICHIERS_LOCAUX);
-  strcat(cheminFichier, morceauFichier.nomFichier);
-
-  pointeurFichier = fopen(cheminFichier, "r");
-  if (pointeurFichier == NULL) {
-    perror("Erreur lors de la lecture du fichier");
-    pthread_exit(NULL);
-  }
-
-  envoyerFichier(pointeurFichier, socketServeur, morceauFichier);
-
-  fclose(pointeurFichier);
-  pthread_exit(NULL);
-}
-
-void *threadEnvoiFichier2(void *arg) {
   const argsThreadEnvoiFichier argsThread = *(argsThreadEnvoiFichier *)arg;
   const int socketServeur = argsThread.socketServeur;
   const Fichier fichier = argsThread.fichier;

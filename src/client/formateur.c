@@ -10,7 +10,6 @@
 static MessageBroadcast *formaterEnBroadcast(const char *saisieClient);
 static AttributionPseudo *formaterEnAttributionPseudo(char *saisieClient);
 static MessagePrive *formaterEnMessagePrive(char *saisieClient);
-static MorceauFichier *formaterEnMorceauFichier(char *saisieClient);
 static Fichier *formaterEnFichier(char *saisieClient);
 int recupererTailleFichier(const char *nomFichier);
 
@@ -33,9 +32,6 @@ void *formater(const char *saisie) {
 
   if (strcmp(nomCommande, "/mp") == 0)
     return formaterEnMessagePrive(saisieSansCommande);
-
-  if (strcmp(nomCommande, "/efl") == 0)
-    return formaterEnMorceauFichier(saisieSansCommande);
 
   if (strcmp(nomCommande, "/envoyer") == 0)
     return formaterEnFichier(saisieSansCommande);
@@ -83,39 +79,6 @@ static MessagePrive *formaterEnMessagePrive(char *saisieClient) {
   strcpy(messagePrive->message, message);
 
   return messagePrive;
-}
-
-static MorceauFichier *formaterEnMorceauFichier(char *saisieClient) {
-  size_t nombreFichiers = 0;
-  struct dirent *tableauFichiers;
-
-  const char *numeroFichierChaine = strtok(saisieClient, " ");
-  if (numeroFichierChaine == NULL) {
-    errno = EINVAL;
-    return NULL;
-  }
-
-  const int numeroFichierInt = atoi(numeroFichierChaine) - 1;
-
-  tableauFichiers = recupererTableauFichiers(&nombreFichiers, CHEMIN_DOSSIER_FICHIERS_LOCAUX);
-
-  if (tableauFichiers == NULL || nombreFichiers == 0 || numeroFichierInt < 0 ||
-      numeroFichierInt >= (int)nombreFichiers) {
-    errno = EINVAL;
-    free(tableauFichiers);
-    return NULL;
-  }
-
-  // Récupération du fichier corresondant au numéro donné par le client
-  const struct dirent fichierSelectionne = tableauFichiers[numeroFichierInt];
-
-  MorceauFichier *morceauFichier = (MorceauFichier *)malloc(sizeof(MorceauFichier));
-  morceauFichier->typeMessage = MORCEAU_FICHIER;
-  strcpy(morceauFichier->nomFichier, fichierSelectionne.d_name);
-  morceauFichier->estDernierMorceau = false;
-
-  free(tableauFichiers);
-  return morceauFichier;
 }
 
 static Fichier *formaterEnFichier(char *saisieClient) {

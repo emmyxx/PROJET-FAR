@@ -19,7 +19,6 @@ static int controlleurAttributionPseudo(const client **listeClients, client *cli
                                         AttributionPseudo pseudo);
 static int controlleurMessagePrive(const client **listeClients, const client *clientCourant,
                                    MessagePrive messagePrive);
-static int controlleurMorceauFichier(const MorceauFichier morceauFichier);
 static int controlleurFichier(const client *clientCourant, const Fichier fichier);
 
 /* -------------------------------------------------------------------------- */
@@ -45,11 +44,6 @@ int routageMessageRecu(client **listeClients, client *clientCourant, void *messa
     MessagePrive messagePrive = *(MessagePrive *)message;
     return controlleurMessagePrive((const client **)listeClients, (const client *)clientCourant,
                                    messagePrive);
-  }
-
-  if (typeMessage == MORCEAU_FICHIER) {
-    const MorceauFichier morceauFichier = *(MorceauFichier *)message;
-    return controlleurMorceauFichier(morceauFichier);
   }
 
   if (typeMessage == FICHIER) {
@@ -105,38 +99,6 @@ static int controlleurMessagePrive(const client **listeClients, const client *cl
 
   envoyerMessageAlerte(clientCourant, "Ce client n'existe pas.", AVERTISSEMENT);
   return -1;
-}
-
-int controlleurMorceauFichier(const MorceauFichier morceauFichier) {
-  const char *nomFichier = morceauFichier.nomFichier;
-  size_t tailleMorceau = morceauFichier.tailleMorceau;
-  FILE *fichier;
-
-  char cheminFichier[PATH_MAX];
-  strcpy(cheminFichier, CHEMIN_DOSSIER_FICHIERS_SERVEUR);
-  strcat(cheminFichier, nomFichier);
-
-  if ((fichier = fopen(cheminFichier, "a")) == NULL) {
-    perror("Erreur lors de l'ouverture du fichier");
-    return -1;
-  }
-
-  size_t octetsEcrits = fwrite(morceauFichier.donnees, 1, tailleMorceau, fichier);
-
-  printf("octetsEcrits : %ld\n", octetsEcrits);
-
-  if (octetsEcrits != tailleMorceau) {
-    fprintf(stderr, "Erreur lors de l'écriture dans le fichier\n");
-    fclose(fichier);
-    return -1;
-  }
-
-  if (morceauFichier.estDernierMorceau) {
-    printf("Réception du fichier \"%s\" terminée.\n", nomFichier);
-  }
-
-  fclose(fichier);
-  return 0;
 }
 
 static int controlleurFichier(const client *clientCourant, const Fichier fichierClient) {

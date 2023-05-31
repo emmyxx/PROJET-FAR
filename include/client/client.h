@@ -85,5 +85,4 @@ typedef struct {
 } argsThreadEnvoiFichier;
 
 void *threadEnvoiFichier(void *arg);
-void *threadEnvoiFichier2(void *arg);
 void *threadReceptionFichier(void *arg);
